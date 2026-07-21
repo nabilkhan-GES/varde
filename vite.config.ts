@@ -29,6 +29,9 @@ function devApi(): Plugin {
 }
 
 export default defineConfig({
+  // '/' for Vercel/custom domains; '/varde/' for GitHub Pages project sites
+  // (set BASE_PATH in the Pages workflow).
+  base: process.env.BASE_PATH || '/',
   plugins: [devApi()],
   build: { target: 'es2022', sourcemap: true },
 });

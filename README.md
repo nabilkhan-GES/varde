@@ -52,10 +52,21 @@ panel merges everything (except aircraft), sorted by severity.
 
 See **CLAUDE.md** for conventions and how to add a layer, **ROADMAP.md** for what's next.
 
-## Deploy (Vercel)
+## Deploy
 
-Push the repo, import at vercel.com (framework auto-detects as Vite), deploy.
-Set optional keys (`EIA_API_KEY`, …) in Project → Settings → Environment Variables.
+**GitHub Pages (no server, no keys) — default.** `.github/workflows/deploy.yml` runs
+`npm run snapshot` (fetches every feed server-side → `public/data/*.json`), builds with
+`BASE_PATH=/varde/`, and publishes to Pages. A cron refreshes the snapshots **hourly**,
+so the live site shows real — if hourly-batched — data with zero backend. Enable once:
+repo **Settings → Pages → Source: GitHub Actions**, then push (or run the workflow).
+Live at `https://<user>.github.io/varde/`.
+
+**Vercel (live, per-request) — when you want real-time.** Import at vercel.com (auto-detects
+Vite); the `/api/*` functions run live so data is current on every refresh. Optional keys
+(`EIA_API_KEY`, …) in Project → Settings → Environment Variables.
+
+The client auto-selects the data path: `/api/*` in dev & on Vercel, `data/*.json` on Pages.
+Aircraft are the one layer that's only meaningful live (Vercel/dev) — hourly snapshots go stale.
 
 ## License
 

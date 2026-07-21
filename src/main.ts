@@ -74,6 +74,11 @@ function focusItem(it: GeoItem) {
     .addTo(map);
 }
 
+// Dev + Vercel: live serverless /api/*. Static hosting (GitHub Pages): prebuilt
+// data/*.json snapshots written by the Actions cron. import.meta.env picks the path.
+const feedUrl = (name: string): string =>
+  import.meta.env.DEV ? `/api/${name}` : `${import.meta.env.BASE_URL}data/${name}.json`;
+
 async function getJson<T>(url: string): Promise<T | null> {
   try {
     const r = await fetch(url);
@@ -92,10 +97,10 @@ async function refresh() {
   topbar.setStale();
   try {
     const [news, haz, fly, mk] = await Promise.all([
-      getJson<NewsResult>('/api/news'),
-      getJson<HazardResult>('/api/hazards'),
-      getJson<FlightResult>('/api/flights'),
-      getJson<MarketResult>('/api/markets'),
+      getJson<NewsResult>(feedUrl('news')),
+      getJson<HazardResult>(feedUrl('hazards')),
+      getJson<FlightResult>(feedUrl('flights')),
+      getJson<MarketResult>(feedUrl('markets')),
     ]);
     if (news) {
       data.incidents = news.incidents;
