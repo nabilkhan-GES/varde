@@ -15,6 +15,7 @@ export interface LayerStyle {
 // Array order is draw order — first is bottom, last (incidents) on top.
 export const LAYER_STYLES: LayerStyle[] = [
   { id: 'flights', label: 'Live aircraft', color: [148, 163, 184], hex: '#94a3b8' },
+  { id: 'classvi', label: 'Class VI (CCUS)', color: [52, 211, 153], hex: '#34d399' },
   { id: 'events', label: 'Natural hazards', color: [167, 139, 250], hex: '#a78bfa' },
   { id: 'weather', label: 'Weather alerts', color: [34, 211, 238], hex: '#22d3ee' },
   { id: 'quakes', label: 'Seismicity', color: [56, 189, 248], hex: '#38bdf8' },

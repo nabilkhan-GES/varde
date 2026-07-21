@@ -106,6 +106,43 @@ export function renderLayerbar(
   };
 }
 
+// ── Class VI (CCUS) tracker ────────────────────────────
+export function renderClassVI(el: HTMLElement, onSelect: (item: GeoItem) => void) {
+  el.innerHTML = `
+    <div class="cv-head">
+      <div class="cv-title"><span class="sw"></span>Class VI · CCUS tracker<span class="n" data-count>0</span></div>
+      <div class="cv-sub" data-sub>Curated snapshot</div>
+    </div>
+    <div class="cv-list" data-list></div>`;
+  const list = el.querySelector('[data-list]') as HTMLElement;
+  const count = el.querySelector('[data-count]') as HTMLElement;
+  const sub = el.querySelector('[data-sub]') as HTMLElement;
+  return {
+    update(wells: GeoItem[], note?: string, asOf?: string) {
+      count.textContent = String(wells.length);
+      if (note) sub.textContent = `Curated snapshot${asOf ? ` · ${asOf}` : ''} · verify at EPA GSDT`;
+      list.innerHTML = wells
+        .map((w, i) => {
+          const status = String(w.kind ?? '');
+          const op = (w.meta?.operator as string) ?? '';
+          return `
+          <div class="cv-row" data-i="${i}">
+            <div class="nm">${esc(w.title)}</div>
+            <div class="mt">
+              <span class="cv-status ${status}">${esc(status)}</span>
+              <span>${esc(w.place ?? '')}</span>
+              ${op ? `<span>· ${esc(op)}</span>` : ''}
+            </div>
+          </div>`;
+        })
+        .join('');
+      list.querySelectorAll<HTMLElement>('.cv-row').forEach((node) => {
+        node.addEventListener('click', () => onSelect(wells[Number(node.dataset.i)]));
+      });
+    },
+  };
+}
+
 // ── Markets ticker ─────────────────────────────────────
 export function renderMarkets(el: HTMLElement) {
   return {

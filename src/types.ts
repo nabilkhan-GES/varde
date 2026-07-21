@@ -5,7 +5,8 @@ export type LayerId =
   | 'quakes'
   | 'events'
   | 'weather'
-  | 'flights';
+  | 'flights'
+  | 'classvi';
 
 /** A single mappable item, normalized across every source. */
 export interface GeoItem {
@@ -47,4 +48,9 @@ export interface FlightResult {
 }
 export interface MarketResult {
   quotes: Quote[];
+}
+export interface ClassViResult {
+  wells: GeoItem[];
+  asOf: string;
+  note: string;
 }

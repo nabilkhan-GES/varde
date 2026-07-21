@@ -83,6 +83,29 @@ a { color: inherit; }
 .toggle .dotc { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .toggle .ct { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--faint); }
 
+/* ── Class VI (CCUS) tracker panel ───────────────────── */
+#classvi {
+  position: absolute; top: 14px; left: 14px; z-index: 4; width: 288px; max-height: 46vh;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 5px;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+#classvi .cv-head { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+#classvi .cv-title { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+#classvi .cv-title .sw { width: 9px; height: 9px; border-radius: 50%; background: #34d399; }
+#classvi .cv-title .n { margin-left: auto; color: #34d399; }
+#classvi .cv-sub { margin-top: 5px; font-size: 10px; line-height: 1.4; color: var(--faint); }
+#classvi .cv-list { overflow-y: auto; }
+.cv-row { padding: 9px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.cv-row:hover { background: var(--panel-2); }
+.cv-row .nm { font-size: 12px; color: var(--ink); line-height: 1.3; }
+.cv-row .mt { margin-top: 4px; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+.cv-status { font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line-2); }
+.cv-status.operating { color: #34d399; border-color: rgba(52,211,153,0.5); }
+.cv-status.constructing { color: var(--sev-mid); border-color: rgba(249,115,22,0.5); }
+.cv-status.permitted { color: #38bdf8; border-color: rgba(56,189,248,0.5); }
+.cv-status\.under-review, .cv-status.under-review { color: var(--dim); }
+
 /* ── Markets ticker ──────────────────────────────────── */
 #markets {
   height: 42px; flex: none; display: flex; align-items: center; gap: 0;

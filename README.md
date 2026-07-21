@@ -35,6 +35,7 @@ Seven live layers, all **keyless**:
 | **Natural hazards** | NASA EONET (wildfires, severe storms, volcanoes, floods) | no |
 | **Weather alerts** | NWS active alerts (tornado/severe, US) | no |
 | **Live aircraft** | OpenSky Network (Gulf / US energy corridor) | no |
+| **Class VI (CCUS)** | EPA/state-primacy CO₂ sequestration permit tracker (curated snapshot → live EPA GSDT feed pending) | no |
 | **Energy markets** | Yahoo (WTI, Brent, Henry Hub, RBOB, XLE) | no |
 
 News layers are scored for **severity** (blowout / fatality / offshore / fire / spill /

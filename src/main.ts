@@ -3,8 +3,9 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl from 'maplibre-gl';
 import { createMap } from './map';
 import { buildLayers } from './layers';
-import { renderLayerbar, renderMarkets, renderRadar, renderTopbar } from './ui';
+import { renderClassVI, renderLayerbar, renderMarkets, renderRadar, renderTopbar } from './ui';
 import type {
+  ClassViResult,
   FlightResult,
   GeoItem,
   HazardResult,
@@ -15,13 +16,16 @@ import type {
 } from './types';
 
 const REFRESH_MS = 60_000;
-const LAYER_IDS: LayerId[] = ['incidents', 'conflict', 'cyber', 'quakes', 'events', 'weather', 'flights'];
+// Aircraft + Class VI are ambient/reference layers — shown on the map but kept
+// out of the incident radar (Class VI has its own tracker panel).
+const LAYER_IDS: LayerId[] = ['incidents', 'conflict', 'cyber', 'quakes', 'events', 'weather', 'flights', 'classvi'];
+const RADAR_EXCLUDE: LayerId[] = ['flights', 'classvi'];
 
 const data: LayerData = {
-  incidents: [], conflict: [], cyber: [], quakes: [], events: [], weather: [], flights: [],
+  incidents: [], conflict: [], cyber: [], quakes: [], events: [], weather: [], flights: [], classvi: [],
 };
 const visible: Record<LayerId, boolean> = {
-  incidents: true, conflict: true, cyber: true, quakes: true, events: true, weather: true, flights: true,
+  incidents: true, conflict: true, cyber: true, quakes: true, events: true, weather: true, flights: true, classvi: true,
 };
 
 const { map, overlay } = createMap(document.getElementById('map')!);
@@ -34,6 +38,7 @@ const layerbar = renderLayerbar(document.getElementById('layerbar')!, visible, (
   draw();
 });
 const markets = renderMarkets(document.getElementById('markets')!);
+const classvi = renderClassVI(document.getElementById('classvi')!, focusItem);
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m] as string));
@@ -43,7 +48,7 @@ const escapeHtml = (s: string) =>
 function mergedItems(): GeoItem[] {
   const out: GeoItem[] = [];
   for (const id of LAYER_IDS) {
-    if (id === 'flights' || !visible[id]) continue;
+    if (RADAR_EXCLUDE.includes(id) || !visible[id]) continue;
     out.push(...data[id]);
   }
   return out.sort((a, b) => b.severity - a.severity || (b.ts ?? 0) - (a.ts ?? 0)).slice(0, 90);
@@ -96,11 +101,12 @@ async function refresh() {
   inFlight = true;
   topbar.setStale();
   try {
-    const [news, haz, fly, mk] = await Promise.all([
+    const [news, haz, fly, mk, cv] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
       getJson<MarketResult>(feedUrl('markets')),
+      getJson<ClassViResult>(feedUrl('classvi')),
     ]);
     if (news) {
       data.incidents = news.incidents;
@@ -114,6 +120,10 @@ async function refresh() {
     }
     if (fly) data.flights = fly.flights;
     if (mk) markets.update(mk.quotes);
+    if (cv) {
+      data.classvi = cv.wells;
+      classvi.update(cv.wells, cv.note, cv.asOf);
+    }
     draw();
     topbar.setUpdated(Date.now());
   } finally {

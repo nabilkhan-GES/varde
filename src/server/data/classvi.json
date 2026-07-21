@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "note": "Curated snapshot of notable EPA + state-primacy Class VI (CO2 geologic sequestration) projects. NOT exhaustive — EPA and primacy programs together track ~190 wells under review or permitted. Verify current status at the EPA Geologic Sequestration Data Tool (udr.epa.gov). Coordinates are town-level approximations.",
+    "asOf": "2025",
+    "source": "EPA UIC Class VI; state primacy programs (ND, WY, LA, TX, WV, AZ)",
+    "primacyStates": ["Arizona", "Louisiana", "North Dakota", "Texas", "West Virginia", "Wyoming"]
+  },
+  "wells": [
+    { "name": "ADM Decatur (CCS #1 & #2)", "operator": "Archer Daniels Midland", "city": "Decatur", "state": "IL", "lat": 39.84, "lon": -88.95, "wells": 2, "status": "operating", "authority": "EPA R5" },
+    { "name": "Red Trail Energy", "operator": "Red Trail Energy", "city": "Richardton", "state": "ND", "lat": 46.88, "lon": -102.31, "wells": 1, "status": "operating", "authority": "ND primacy" },
+    { "name": "Blue Flint", "operator": "Harvestone Low Carbon Partners", "city": "Underwood", "state": "ND", "lat": 47.45, "lon": -101.14, "wells": 1, "status": "operating", "authority": "ND primacy" },
+    { "name": "Wabash Carbon Services", "operator": "Wabash Valley Resources", "city": "West Terre Haute", "state": "IN", "lat": 39.53, "lon": -87.45, "wells": 2, "status": "permitted", "authority": "EPA R5" },
+    { "name": "Project Tundra", "operator": "Minnkota Power Cooperative", "city": "Center", "state": "ND", "lat": 47.12, "lon": -101.30, "wells": 2, "status": "permitted", "authority": "ND primacy" },
+    { "name": "Stratos DAC", "operator": "1PointFive (Occidental)", "city": "Ector County", "state": "TX", "lat": 31.87, "lon": -102.54, "wells": 2, "status": "constructing", "authority": "EPA R6 / TX" },
+    { "name": "One Earth Sequestration", "operator": "One Earth Energy", "city": "Gibson City", "state": "IL", "lat": 40.46, "lon": -88.38, "wells": 2, "status": "under-review", "authority": "EPA R5" },
+    { "name": "Carbon TerraVault I", "operator": "California Resources Corp.", "city": "Elk Hills", "state": "CA", "lat": 35.25, "lon": -119.45, "wells": 4, "status": "under-review", "authority": "EPA R9" }
+  ]
+}

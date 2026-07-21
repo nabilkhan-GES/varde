@@ -16,8 +16,10 @@
 - **Rig count** parser (Baker Hughes) with a vitest test.
 
 ## v0.3 — Flagship PRO layers
-- **Class VI (CCUS) permit tracker:** `api/classvi.ts` pulling EPA UIC Class VI permit
-  data, a map layer, and a panel of recent status changes. Flagship PRO feature.
+- **Class VI (CCUS) permit tracker:** SHIPPED as a curated, sourced snapshot
+  (`src/server/data/classvi.json`) with a map layer + tracker panel. TODO: swap in a
+  live feed — EPA GSDT (udr.epa.gov) or the Clean Air Task Force national tracker —
+  in `src/server/routes/classvi.ts`, and add status-change diffing over snapshots.
 - **Orphan/legacy well layer** (state RRC / EPA datasets) — ties to relief-well audience.
 - **Snapshots + playback:** IndexedDB capture each refresh, 7-day retention, a timeline
   scrubber in the map bar.
