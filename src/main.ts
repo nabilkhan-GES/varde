@@ -10,6 +10,7 @@ import type {
   FlightResult,
   GeoItem,
   HazardResult,
+  InventoriesResult,
   LayerData,
   LayerId,
   MarketResult,
@@ -108,13 +109,14 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
       getJson<MarketResult>(feedUrl('markets')),
       getJson<ClassViResult>(feedUrl('classvi')),
       getJson<EnergyResult>(feedUrl('energy')),
+      getJson<InventoriesResult>(feedUrl('inventories')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -128,6 +130,7 @@ async function refresh() {
       cards.setMarkets(quotes);
     }
     cards.setEnergy(quotes, en);
+    cards.setInventories(inv);
     draw();
     cmd.setLive(Date.now());
   } finally {

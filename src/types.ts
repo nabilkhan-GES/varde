@@ -81,3 +81,22 @@ export interface EnergyResult {
   series: EnergyStat[];
   asOf?: string;
 }
+
+export interface InventoryPoint {
+  period: string; // ISO date (weekly)
+  value: number;
+}
+export interface InventorySeries {
+  key: string;
+  label: string;
+  unit: string;
+  color: string; // hex, for the chart stroke/fill
+  latest: number | null;
+  changePct: number | null; // week-over-week
+  points: InventoryPoint[]; // oldest → newest
+}
+export interface InventoriesResult {
+  available: boolean;
+  series: InventorySeries[];
+  asOf?: string;
+}

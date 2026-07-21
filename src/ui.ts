@@ -1,6 +1,6 @@
 import { severityColor } from './severity';
 import { LAYER_STYLES } from './layers';
-import type { EnergyResult, GeoItem, LayerId, Quote } from './types';
+import type { EnergyResult, GeoItem, InventoriesResult, InventorySeries, LayerId, Quote } from './types';
 
 const rgb = (c: [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`;
 const esc = (s: string) =>
@@ -24,6 +24,22 @@ function sparkSVG(vals: number[], w = 150, h = 26): string {
     .join(' ');
   const col = vals[vals.length - 1] >= vals[0] ? 'var(--up)' : 'var(--down)';
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.4"/></svg>`;
+}
+
+// Filled area chart (line + translucent fill) for inventory time-series.
+function areaSVG(vals: number[], color: string, w = 268, h = 46): string {
+  if (!vals || vals.length < 2) return '<div class="chart-empty">no data</div>';
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const rng = max - min || 1;
+  const x = (i: number) => ((i / (vals.length - 1)) * w).toFixed(1);
+  const y = (v: number) => (h - ((v - min) / rng) * (h - 6) - 3).toFixed(1);
+  const line = vals.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+  const area = `0,${h} ${line} ${w},${h}`;
+  return `<svg class="area" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polygon points="${area}" fill="${color}" fill-opacity="0.12"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="1.5"/>
+  </svg>`;
 }
 
 const LAYER_INFO: Record<LayerId, string> = {
@@ -175,6 +191,7 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
   el.innerHTML = `
     <div class="card" data-card="markets"><div class="card-h"><span class="t">Markets · Live Tape</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="energy"><div class="card-h"><span class="t">Energy Complex</span><span class="q" title="Live prices are real; inventories require a free EIA_API_KEY">ⓘ</span></div><div class="card-b pad" data-b></div></div>
+    <div class="card" data-card="inventories"><div class="card-h"><span class="t">Oil Inventories</span><span class="q" title="EIA weekly stocks — commercial crude, SPR, total oil & Lower-48 nat-gas working storage">ⓘ</span><span class="n" data-n></span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="signal"><div class="card-h"><span class="t">Signal · Incidents / Conflict / Cyber</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="hazards"><div class="card-h"><span class="t">Hazards & Disasters</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="classvi"><div class="card-h"><span class="t">Class VI · CCUS Tracker</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>`;
@@ -270,6 +287,33 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
             ? `EIA weekly · as of ${energy.asOf ?? '—'} · prices delayed`
             : `Prices live (delayed) · US inventories, storage & SPR appear when an <b>EIA_API_KEY</b> is set (free at eia.gov/opendata)`
         }</div>`;
+    },
+    setInventories(inv?: InventoriesResult | null) {
+      const b = body('inventories');
+      if (!inv?.available || !inv.series.length) {
+        num('inventories').textContent = '';
+        b.innerHTML = `<div class="note">US total oil stocks (commercial + SPR) and Lower-48 nat-gas working storage — weekly history — appear when an <b>EIA_API_KEY</b> is set (free at eia.gov/opendata).</div>`;
+        return;
+      }
+      num('inventories').textContent = `${inv.series[0]?.points.length ?? 0}w`;
+      const chartRow = (s: InventorySeries) => {
+        const vals = s.points.map((p) => p.value);
+        const up = (s.changePct ?? 0) >= 0;
+        const wow =
+          s.changePct != null
+            ? `<span class="wow ${up ? 'up' : 'dn'}">${up ? '+' : ''}${s.changePct}% WoW</span>`
+            : '';
+        return `<div class="inv-row">
+          <div class="inv-head">
+            <span class="inv-l"><span class="inv-dot" style="background:${s.color}"></span>${esc(s.label)}</span>
+            <span class="inv-v">${s.latest != null ? Math.round(s.latest).toLocaleString() : '—'} <span class="inv-u">${esc(s.unit)}</span> ${wow}</span>
+          </div>
+          ${areaSVG(vals, s.color)}
+        </div>`;
+      };
+      b.innerHTML =
+        inv.series.map(chartRow).join('') +
+        `<div class="note">EIA weekly · as of ${inv.asOf ?? '—'} · commercial = crude excluding SPR</div>`;
     },
   };
 }

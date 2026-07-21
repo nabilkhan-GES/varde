@@ -141,6 +141,18 @@ a { color: inherit; text-decoration: none; }
 .wow.dn { color: var(--down); }
 .note { margin-top: 10px; font-size: 10px; line-height: 1.5; color: var(--faint); }
 
+/* oil inventories area charts */
+.inv-row { margin-bottom: 12px; }
+.inv-row:last-of-type { margin-bottom: 4px; }
+.inv-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+.inv-l { font-size: 10px; letter-spacing: 0.04em; color: var(--dim); display: inline-flex; align-items: center; gap: 6px; }
+.inv-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.inv-v { font-size: 12.5px; color: var(--ink); white-space: nowrap; }
+.inv-u { font-size: 9px; color: var(--faint); }
+.inv-v .wow { font-size: 9.5px; margin-left: 4px; }
+.area { width: 100%; height: 46px; display: block; }
+.chart-empty { font-size: 10px; color: var(--faint); padding: 12px 0; }
+
 .maplibregl-popup-content { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2); border-radius: 4px; padding: 11px 13px; max-width: 270px; font-family: var(--sans); }
 .maplibregl-popup-content .pt { font-size: 13px; line-height: 1.4; margin-bottom: 6px; }
 .maplibregl-popup-content .pm { font-family: var(--mono); font-size: 10px; color: var(--dim); }
