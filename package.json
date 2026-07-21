@@ -1,0 +1,27 @@
+{
+  "name": "varde",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Varde — real-time energy situational-awareness dashboard (incidents, hazards, seismicity, energy markets).",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deck.gl/core": "^9.0.36",
+    "@deck.gl/layers": "^9.0.36",
+    "@deck.gl/mapbox": "^9.0.36",
+    "maplibre-gl": "^4.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.9",
+    "vitest": "^2.1.3"
+  }
+}
