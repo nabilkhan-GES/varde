@@ -171,21 +171,22 @@ export function renderLayerPanel(
 }
 
 // ── Right-side cards ───────────────────────────────────
+// Dense, columnar table row: severity bar · event (+ place) · type · sev · age.
 function rowHtml(it: GeoItem, i: number): string {
   return `
-    <div class="row" data-i="${i}">
-      <div class="bar" style="background:${rgb(severityColor(it.severity))}"></div>
-      <div>
-        <div class="rt">${esc(it.title)}</div>
-        <div class="rm">
-          <span class="chip">${esc(it.layer)}</span>
-          <span>sev ${it.severity.toFixed(1)}</span>
-          ${it.place ? `<span>${esc(String(it.place))}</span>` : ''}
-          ${it.ts ? `<span>${ago(it.ts)} ago</span>` : ''}
-        </div>
+    <div class="trow" data-i="${i}">
+      <span class="tbar" style="background:${rgb(severityColor(it.severity))}"></span>
+      <div class="tmain">
+        <div class="tt">${esc(it.title)}</div>
+        ${it.place ? `<div class="tsub">${esc(String(it.place))}</div>` : ''}
       </div>
+      <span class="ttype">${esc(it.layer)}</span>
+      <span class="tsev">${it.severity.toFixed(1)}</span>
+      <span class="tage">${it.ts ? ago(it.ts) : '—'}</span>
     </div>`;
 }
+
+const TABLE_HEAD = `<div class="thead"><span></span><span>Event</span><span>Type</span><span>Sev</span><span>Age</span></div>`;
 
 export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) {
   el.innerHTML = `
@@ -200,7 +201,7 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
   const num = (card: string) => el.querySelector(`[data-card="${card}"] [data-n]`) as HTMLElement;
 
   const bindRows = (container: HTMLElement, items: GeoItem[]) => {
-    container.querySelectorAll<HTMLElement>('.row').forEach((node) =>
+    container.querySelectorAll<HTMLElement>('[data-i]').forEach((node) =>
       node.addEventListener('click', () => onSelect(items[Number(node.dataset.i)])),
     );
   };
@@ -209,7 +210,7 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     num(card).textContent = String(items.length);
     const b = body(card);
     b.innerHTML = items.length
-      ? items.map((it, i) => rowHtml(it, i)).join('')
+      ? TABLE_HEAD + items.map((it, i) => rowHtml(it, i)).join('')
       : `<div class="empty">No items in range.</div>`;
     bindRows(b, items);
   };

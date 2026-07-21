@@ -121,6 +121,24 @@ a { color: inherit; text-decoration: none; }
 .chip { font-size: 8.5px; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 5px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--dim); }
 .empty { padding: 18px 12px; color: var(--faint); font-size: 11px; text-align: center; }
 
+/* dense columnar table (signal / hazards) */
+.thead, .trow { display: grid; grid-template-columns: 3px minmax(0, 1fr) 60px 30px 30px; gap: 8px; align-items: center; }
+.thead {
+  position: sticky; top: 0; z-index: 1; padding: 5px 12px; background: var(--panel);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint);
+}
+.thead span:nth-child(4), .thead span:nth-child(5) { text-align: right; }
+.trow { padding: 7px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.trow:hover { background: var(--panel-2); }
+.trow .tbar { align-self: stretch; width: 3px; border-radius: 2px; min-height: 20px; }
+.trow .tmain { min-width: 0; }
+.trow .tt { font-size: 11.5px; line-height: 1.3; color: var(--ink); font-family: var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trow .tsub { font-size: 9.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.trow .ttype { font-size: 8.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trow .tsev { font-size: 11px; color: var(--ink); text-align: right; }
+.trow .tage { font-size: 10px; color: var(--faint); text-align: right; }
+
 /* markets tape */
 .mkrow { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
 .mkrow .nm { font-size: 11px; color: var(--dim); width: 74px; }
