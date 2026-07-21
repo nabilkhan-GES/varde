@@ -6,7 +6,9 @@ export type LayerId =
   | 'events'
   | 'weather'
   | 'flights'
-  | 'classvi';
+  | 'classvi'
+  | 'disasters'
+  | 'storms';
 
 /** A single mappable item, normalized across every source. */
 export interface GeoItem {
@@ -42,6 +44,8 @@ export interface HazardResult {
   quakes: GeoItem[];
   events: GeoItem[];
   weather: GeoItem[];
+  disasters: GeoItem[];
+  storms: GeoItem[];
 }
 export interface FlightResult {
   flights: GeoItem[];

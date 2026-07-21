@@ -18,14 +18,16 @@ import type {
 const REFRESH_MS = 60_000;
 // Aircraft + Class VI are ambient/reference layers — shown on the map but kept
 // out of the incident radar (Class VI has its own tracker panel).
-const LAYER_IDS: LayerId[] = ['incidents', 'conflict', 'cyber', 'quakes', 'events', 'weather', 'flights', 'classvi'];
+const LAYER_IDS: LayerId[] = [
+  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi',
+];
 const RADAR_EXCLUDE: LayerId[] = ['flights', 'classvi'];
 
 const data: LayerData = {
-  incidents: [], conflict: [], cyber: [], quakes: [], events: [], weather: [], flights: [], classvi: [],
+  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [],
 };
 const visible: Record<LayerId, boolean> = {
-  incidents: true, conflict: true, cyber: true, quakes: true, events: true, weather: true, flights: true, classvi: true,
+  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true,
 };
 
 const { map, overlay } = createMap(document.getElementById('map')!);
@@ -117,6 +119,8 @@ async function refresh() {
       data.quakes = haz.quakes;
       data.events = haz.events;
       data.weather = haz.weather;
+      data.disasters = haz.disasters;
+      data.storms = haz.storms;
     }
     if (fly) data.flights = fly.flights;
     if (mk) markets.update(mk.quotes);

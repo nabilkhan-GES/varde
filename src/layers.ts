@@ -17,6 +17,8 @@ export const LAYER_STYLES: LayerStyle[] = [
   { id: 'flights', label: 'Live aircraft', color: [148, 163, 184], hex: '#94a3b8' },
   { id: 'classvi', label: 'Class VI (CCUS)', color: [52, 211, 153], hex: '#34d399' },
   { id: 'events', label: 'Natural hazards', color: [167, 139, 250], hex: '#a78bfa' },
+  { id: 'disasters', label: 'Global disasters', color: [234, 179, 8], hex: '#eab308' },
+  { id: 'storms', label: 'Tropical cyclones', color: [45, 212, 191], hex: '#2dd4bf' },
   { id: 'weather', label: 'Weather alerts', color: [34, 211, 238], hex: '#22d3ee' },
   { id: 'quakes', label: 'Seismicity', color: [56, 189, 248], hex: '#38bdf8' },
   { id: 'cyber', label: 'Cyber', color: [232, 121, 249], hex: '#e879f9' },
