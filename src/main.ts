@@ -2,14 +2,27 @@ import './style.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl from 'maplibre-gl';
 import { createMap } from './map';
-import { buildLayers, type LayerData } from './layers';
+import { buildLayers } from './layers';
 import { renderLayerbar, renderMarkets, renderRadar, renderTopbar } from './ui';
-import type { FeedResult, GeoItem, HazardResult, LayerId, MarketResult } from './types';
+import type {
+  FlightResult,
+  GeoItem,
+  HazardResult,
+  LayerData,
+  LayerId,
+  MarketResult,
+  NewsResult,
+} from './types';
 
 const REFRESH_MS = 60_000;
+const LAYER_IDS: LayerId[] = ['incidents', 'conflict', 'cyber', 'quakes', 'events', 'weather', 'flights'];
 
-const data: LayerData = { incidents: [], quakes: [], events: [] };
-const visible: Record<LayerId, boolean> = { incidents: true, quakes: true, events: true };
+const data: LayerData = {
+  incidents: [], conflict: [], cyber: [], quakes: [], events: [], weather: [], flights: [],
+};
+const visible: Record<LayerId, boolean> = {
+  incidents: true, conflict: true, cyber: true, quakes: true, events: true, weather: true, flights: true,
+};
 
 const { map, overlay } = createMap(document.getElementById('map')!);
 let popup: maplibregl.Popup | null = null;
@@ -25,23 +38,26 @@ const markets = renderMarkets(document.getElementById('markets')!);
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m] as string));
 
+// Radar = the situational feed: everything visible except aircraft (which are
+// ambient movement, not events), severity-sorted.
 function mergedItems(): GeoItem[] {
   const out: GeoItem[] = [];
-  (Object.keys(visible) as LayerId[]).forEach((id) => {
-    if (visible[id]) out.push(...data[id]);
-  });
-  return out.sort((a, b) => b.severity - a.severity || (b.ts ?? 0) - (a.ts ?? 0)).slice(0, 80);
+  for (const id of LAYER_IDS) {
+    if (id === 'flights' || !visible[id]) continue;
+    out.push(...data[id]);
+  }
+  return out.sort((a, b) => b.severity - a.severity || (b.ts ?? 0) - (a.ts ?? 0)).slice(0, 90);
+}
+
+function counts(): Record<LayerId, number> {
+  return Object.fromEntries(LAYER_IDS.map((id) => [id, data[id].length])) as Record<LayerId, number>;
 }
 
 function draw() {
   overlay.setProps({ layers: buildLayers(data, visible, focusItem) });
   const merged = mergedItems();
   radar.update(merged);
-  layerbar.setCounts({
-    incidents: data.incidents.length,
-    quakes: data.quakes.length,
-    events: data.events.length,
-  });
+  layerbar.setCounts(counts());
   topbar.setStats(merged.length, merged[0]?.severity ?? 0);
 }
 
@@ -75,16 +91,23 @@ async function refresh() {
   inFlight = true;
   topbar.setStale();
   try {
-    const [inc, haz, mk] = await Promise.all([
-      getJson<FeedResult>('/api/incidents'),
+    const [news, haz, fly, mk] = await Promise.all([
+      getJson<NewsResult>('/api/news'),
       getJson<HazardResult>('/api/hazards'),
+      getJson<FlightResult>('/api/flights'),
       getJson<MarketResult>('/api/markets'),
     ]);
-    if (inc) data.incidents = inc.items;
+    if (news) {
+      data.incidents = news.incidents;
+      data.conflict = news.conflict;
+      data.cyber = news.cyber;
+    }
     if (haz) {
       data.quakes = haz.quakes;
       data.events = haz.events;
+      data.weather = haz.weather;
     }
+    if (fly) data.flights = fly.flights;
     if (mk) markets.update(mk.quotes);
     draw();
     topbar.setUpdated(Date.now());

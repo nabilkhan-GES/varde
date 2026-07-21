@@ -1,4 +1,11 @@
-export type LayerId = 'incidents' | 'quakes' | 'events';
+export type LayerId =
+  | 'incidents'
+  | 'conflict'
+  | 'cyber'
+  | 'quakes'
+  | 'events'
+  | 'weather'
+  | 'flights';
 
 /** A single mappable item, normalized across every source. */
 export interface GeoItem {
@@ -11,7 +18,7 @@ export interface GeoItem {
   url?: string;
   ts?: number; // epoch ms
   severity: number; // computed score, >= 1
-  kind?: string; // sub-category (EONET category, magnitude band, …)
+  kind?: string; // sub-category (EONET category, magnitude band, aircraft, …)
   meta?: Record<string, unknown>;
 }
 
@@ -23,15 +30,21 @@ export interface Quote {
   changePct: number;
 }
 
-export interface FeedResult {
-  items: GeoItem[];
-}
+export type LayerData = Record<LayerId, GeoItem[]>;
 
+export interface NewsResult {
+  incidents: GeoItem[];
+  conflict: GeoItem[];
+  cyber: GeoItem[];
+}
 export interface HazardResult {
   quakes: GeoItem[];
   events: GeoItem[];
+  weather: GeoItem[];
 }
-
+export interface FlightResult {
+  flights: GeoItem[];
+}
 export interface MarketResult {
   quotes: Quote[];
 }

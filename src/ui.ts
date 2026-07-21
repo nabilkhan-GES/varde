@@ -83,7 +83,7 @@ export function renderLayerbar(
       (s) => `
       <div class="toggle ${visible[s.id] ? 'on' : ''}" data-id="${s.id}">
         <span class="sw"></span>
-        <span class="dotc" style="background:${s.color}"></span>
+        <span class="dotc" style="background:${s.hex}"></span>
         <span>${s.label}</span>
         <span class="ct" data-ct="${s.id}">0</span>
       </div>`,

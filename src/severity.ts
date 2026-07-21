@@ -13,6 +13,11 @@ const RULES: Array<[RegExp, number]> = [
   [/refinery|refining|terminal|LNG|processing plant/i, 1.3],
   [/shutdown|outage|force majeure|shut in/i, 1.2],
   [/pipeline|wellhead|storage/i, 1.15],
+  // conflict / geopolitics
+  [/missile|air ?strike|shelling|drone strike|invasion|offensive|bombard/i, 2],
+  [/sanction|embargo|blockade|seiz(e|ed|ure)/i, 1.3],
+  // cyber
+  [/ransomware|data breach|breached|hacked|cyber[- ]?attack|malware|SCADA/i, 1.8],
 ];
 
 const CAP = 12;

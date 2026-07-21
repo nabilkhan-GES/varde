@@ -1,16 +1,18 @@
 # ROADMAP
 
 ## v0.1 — MVP (shipped)
-- MapLibre + deck.gl overlay, dark ops shell.
-- Layers: energy incidents (GDELT GEO), seismicity (USGS), natural hazards (NASA EONET).
-- Energy markets ticker (Stooq). Severity scoring + severity-sorted radar. Auto-refresh.
+- MapLibre + deck.gl overlay, dark ops shell; color-per-layer, radius-by-severity.
+- Seven keyless layers: energy incidents, conflict, cyber (Google News RSS, geocoded);
+  seismicity (USGS); natural hazards (NASA EONET); weather alerts (NWS); live aircraft
+  (OpenSky). Energy markets ticker (Yahoo). Severity scoring + severity-sorted radar.
+  Auto-refresh, layer toggles, click-to-fly popups. Vitest: severity + parseRss.
 
 ## v0.2 — Depth on the core layers
-- **Article-level incidents:** switch/augment GDELT GEO with DOC 2.0 ArtList for clean
-  titles + per-article geocoding, country-centroid fallback. Dedupe by story.
-- **NWS/weather alerts layer** (`api.weather.gov`, keyless) — Gulf/onshore storm risk to
-  infrastructure; render alert polygons (deck `GeoJsonLayer`).
-- **EIA prices** (`EIA_API_KEY`): real prev-close change + a spot-price mini-panel.
+- **Article-level geocoding:** replace headline→gazetteer with real per-article geo
+  (GDELT DOC 2.0 sourcecountry + place NER), dedupe by story across the news layers.
+- **Weather polygons:** render NWS alert areas as deck `GeoJsonLayer` (not just centroids).
+- **Maritime/AIS** layer (vessel tracking) and **flights** heading/altitude styling.
+- **EIA prices** (`EIA_API_KEY`): real spot-price panel + production series.
 - **Rig count** parser (Baker Hughes) with a vitest test.
 
 ## v0.3 — Flagship PRO layers

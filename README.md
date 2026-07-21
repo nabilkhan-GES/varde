@@ -22,17 +22,24 @@ npm run build          # typecheck + production build → dist/
 npm test               # vitest
 ```
 
-## What's on the map (MVP)
+## What's on the map
+
+Seven live layers, all **keyless**:
 
 | Layer | Source | Key? |
 |---|---|---|
-| **Energy incidents** | GDELT GEO 2.0 (oil/gas/pipeline/blowout/offshore… geolocated) | no |
+| **Energy incidents** | Google News RSS (spill/blowout/refinery/offshore…), gazetteer-geocoded | no |
+| **Conflict** | Google News RSS (war/strike/blockade scoped to energy & infrastructure) | no |
+| **Cyber** | Google News RSS (ransomware/breach/SCADA scoped to energy & grid) | no |
 | **Seismicity** | USGS earthquakes (M2.5+, past day) | no |
 | **Natural hazards** | NASA EONET (wildfires, severe storms, volcanoes, floods) | no |
-| **Energy markets** | Stooq (WTI, Brent, Henry Hub, RBOB, XLE) | no |
+| **Weather alerts** | NWS active alerts (tornado/severe, US) | no |
+| **Live aircraft** | OpenSky Network (Gulf / US energy corridor) | no |
+| **Energy markets** | Yahoo (WTI, Brent, Henry Hub, RBOB, XLE) | no |
 
-Incidents are scored for **severity** (blowout / fatality / offshore / fire / spill
-keyword multipliers); markers are colored and the radar panel is sorted by score.
+News layers are scored for **severity** (blowout / fatality / offshore / fire / spill /
+missile / ransomware keyword multipliers); each layer has its own color and the radar
+panel merges everything (except aircraft), sorted by severity.
 
 ## Architecture
 

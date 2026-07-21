@@ -2,13 +2,17 @@
 // process-memory TTL cache (good enough for dev + a warm serverless instance;
 // swap for Upstash/Redis when traffic warrants — see ROADMAP).
 
-export async function fetchText(url: string, timeoutMs = 12000): Promise<string> {
+export async function fetchText(
+  url: string,
+  timeoutMs = 12000,
+  headers?: Record<string, string>,
+): Promise<string> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const r = await fetch(url, {
       signal: ctrl.signal,
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; varde/0.1; +https://varde.app)' },
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; varde/0.1; +https://varde.app)', ...headers },
     });
     if (!r.ok) throw new Error(`${url} → HTTP ${r.status}`);
     return await r.text();
@@ -17,8 +21,12 @@ export async function fetchText(url: string, timeoutMs = 12000): Promise<string>
   }
 }
 
-export async function fetchJson<T = unknown>(url: string, timeoutMs = 12000): Promise<T> {
-  return JSON.parse(await fetchText(url, timeoutMs)) as T;
+export async function fetchJson<T = unknown>(
+  url: string,
+  timeoutMs = 12000,
+  headers?: Record<string, string>,
+): Promise<T> {
+  return JSON.parse(await fetchText(url, timeoutMs, headers)) as T;
 }
 
 const store = new Map<string, { at: number; val: unknown }>();

@@ -1,9 +1,8 @@
-import { handler } from '../src/server/routes/incidents';
+import { handler } from '../src/server/routes/news';
 
-export default async function (req: any, res: any) {
+export default async function (_req: any, res: any) {
   try {
-    const params = new URL(req.url, 'http://localhost').searchParams;
-    const data = await handler(params);
+    const data = await handler();
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900');
     res.setHeader('content-type', 'application/json');
     res.status(200).send(JSON.stringify(data));
