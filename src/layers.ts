@@ -1,4 +1,4 @@
-import { ScatterplotLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import { severityRadius } from './severity';
 import type { GeoItem, LayerData, LayerId } from './types';
@@ -32,13 +32,49 @@ export function withinWindow(items: GeoItem[], sinceMs: number): GeoItem[] {
   return items.filter((d) => !d.ts || d.ts >= sinceMs);
 }
 
+// NWS alert areas, drawn as filled polygons beneath every point layer so the
+// dots stay legible on top. Cyan to match the weather layer's swatch.
+const WEATHER_HEX = LAYER_STYLES.find((s) => s.id === 'weather')!.color;
+function weatherPolygonLayer(
+  data: LayerData,
+  visible: Record<LayerId, boolean>,
+  onPick: (item: GeoItem) => void,
+  sinceMs: number,
+): Layer | null {
+  const areas = withinWindow(data.weather ?? [], sinceMs).filter((d) => d.polygon);
+  if (!visible.weather || areas.length === 0) return null;
+  const features = areas.map((d) => ({
+    type: 'Feature' as const,
+    geometry: d.polygon!,
+    properties: { item: d },
+  }));
+  // Cast: our GeoJsonGeometry is a lean subset of GeoJSON's strict Geometry union.
+  const fc = { type: 'FeatureCollection', features } as any;
+  return new GeoJsonLayer({
+    id: 'weather-poly',
+    data: fc,
+    pickable: true,
+    stroked: true,
+    filled: true,
+    lineWidthUnits: 'pixels',
+    getLineWidth: 1.2,
+    getLineColor: [...WEATHER_HEX, 200] as [number, number, number, number],
+    getFillColor: [...WEATHER_HEX, 40] as [number, number, number, number],
+    onClick: (info) => {
+      const f = info.object as { properties?: { item?: GeoItem } } | undefined;
+      if (f?.properties?.item) onPick(f.properties.item);
+    },
+  });
+}
+
 export function buildLayers(
   data: LayerData,
   visible: Record<LayerId, boolean>,
   onPick: (item: GeoItem) => void,
   sinceMs = 0,
 ): Layer[] {
-  return LAYER_STYLES.map(
+  const poly = weatherPolygonLayer(data, visible, onPick, sinceMs);
+  const points = LAYER_STYLES.map(
     (s) =>
       new ScatterplotLayer<GeoItem>({
         id: s.id,
@@ -60,4 +96,6 @@ export function buildLayers(
         },
       }),
   );
+  // Polygons first (bottom), then all point layers on top.
+  return poly ? [poly, ...points] : points;
 }

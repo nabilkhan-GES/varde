@@ -8,9 +8,21 @@
   Auto-refresh, layer toggles, click-to-fly popups. Vitest: severity + parseRss.
 
 ## v0.2 — Depth on the core layers
-- **Article-level geocoding:** replace headline→gazetteer with real per-article geo
-  (GDELT DOC 2.0 sourcecountry + place NER), dedupe by story across the news layers.
-- **Weather polygons:** render NWS alert areas as deck `GeoJsonLayer` (not just centroids).
+- **Precision-aware geocoding:** SHIPPED. The gazetteer now has three tiers —
+  energy cities/ports → basins/seas/states → country centroids (`src/server/places.ts`),
+  matched most-specific-first, with jitter scaled to precision so city-level dots
+  cluster tightly and country-level dots fan out. `geocodeDetailed()` returns the tier.
+- **Cross-layer story dedupe:** SHIPPED. `dedupeStories()` (`src/server/news.ts`) unions
+  items sharing a canonical URL or normalized title (disjoint-set), keeping the
+  highest-severity copy, so one event isn't double-plotted across incidents/conflict/cyber.
+- **Weather polygons:** SHIPPED. NWS alert areas render as a filled deck `GeoJsonLayer`
+  beneath the point layers (`src/layers.ts`); geometry is carried on `GeoItem.polygon`,
+  coordinate-rounded in `hazards.ts` to keep the Pages snapshot lean.
+- **GDELT DOC 2.0 (sourcecountry geo):** BUILT but OFF by default (`src/server/gdelt.ts`,
+  gate `VARDE_GDELT=1`). Evaluated for the incidents layer; its full-text matching is too
+  loose (energy terms collide with data/sales "pipelines" etc.) and it rate-limits to
+  ~1 req/5s. Kept behind the flag with a relevance gate + tests; revisit with a tighter
+  query or the GEO 2.0 endpoint before enabling.
 - **Maritime/AIS** layer (vessel tracking) and **flights** heading/altitude styling.
 - **EIA prices** (`EIA_API_KEY`): real spot-price panel + production series.
 - **Rig count** parser (Baker Hughes) with a vitest test.

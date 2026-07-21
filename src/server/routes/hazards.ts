@@ -4,7 +4,7 @@
 //  • NWS active weather alerts (US, severe/extreme) — free, no key
 import { cached, fetchJson } from '../util';
 import { scoreMagnitude } from '../../severity';
-import type { GeoItem, HazardResult } from '../../types';
+import type { GeoItem, GeoJsonGeometry, HazardResult } from '../../types';
 
 const EONET_SEVERITY: Record<string, number> = {
   Volcanoes: 3,
@@ -173,10 +173,27 @@ async function loadWeather(): Promise<GeoItem[]> {
       ts: p.sent ? Date.parse(p.sent) : undefined,
       severity: NWS_SEVERITY[String(p.severity)] ?? 1.5,
       kind: String(p.severity ?? 'Alert'),
+      polygon: simplifyGeometry(f.geometry),
       meta: { event: p.event },
     });
   }
   return items.sort((a, b) => b.severity - a.severity).slice(0, 120);
+}
+
+// Keep the alert's area geometry for a filled map layer, but round coordinates
+// to ~11 m (3 decimals) so the Pages snapshot stays lean. Returns undefined for
+// non-polygon geometries (some NWS alerts carry only a zone reference, no shape).
+function simplifyGeometry(geometry: any): GeoJsonGeometry | undefined {
+  if (!geometry) return undefined;
+  const r = (n: number) => Math.round(n * 1000) / 1000;
+  const ring = (poly: any[]): number[][][] => poly.map((r0: any[]) => r0.map(([x, y]) => [r(x), r(y)]));
+  if (geometry.type === 'Polygon') {
+    return { type: 'Polygon', coordinates: ring(geometry.coordinates) };
+  }
+  if (geometry.type === 'MultiPolygon') {
+    return { type: 'MultiPolygon', coordinates: geometry.coordinates.map(ring) };
+  }
+  return undefined;
 }
 
 function centroid(geometry: any): [number, number] | null {

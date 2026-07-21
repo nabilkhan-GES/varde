@@ -22,7 +22,16 @@ export interface GeoItem {
   ts?: number; // epoch ms
   severity: number; // computed score, >= 1
   kind?: string; // sub-category (EONET category, magnitude band, aircraft, …)
+  /** Optional area geometry (e.g. NWS alert polygons) for a filled map layer.
+   *  Point layers still use lon/lat (the geometry's centroid). */
+  polygon?: GeoJsonGeometry;
   meta?: Record<string, unknown>;
+}
+
+/** Minimal GeoJSON Polygon / MultiPolygon (rings of [lon, lat]). */
+export interface GeoJsonGeometry {
+  type: 'Polygon' | 'MultiPolygon';
+  coordinates: number[][][] | number[][][][];
 }
 
 export interface Quote {
