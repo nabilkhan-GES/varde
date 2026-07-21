@@ -29,6 +29,10 @@ jobs:
       - run: npm ci
       - name: Snapshot live feeds → public/data/*.json
         run: npm run snapshot
+        env:
+          # Optional: add EIA_API_KEY as a repo Actions secret to populate the
+          # Energy Complex inventory/storage cards (free at eia.gov/opendata).
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
       - name: Build (GitHub Pages base path)
         run: npm run build
         env:

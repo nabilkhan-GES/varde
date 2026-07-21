@@ -59,3 +59,16 @@ export interface ClassViResult {
   asOf: string;
   note: string;
 }
+export interface EnergyStat {
+  key: string;
+  label: string;
+  unit: string;
+  value: number | null;
+  changePct: number | null;
+  period?: string;
+}
+export interface EnergyResult {
+  available: boolean;
+  series: EnergyStat[];
+  asOf?: string;
+}

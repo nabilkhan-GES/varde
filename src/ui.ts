@@ -1,6 +1,6 @@
 import { severityColor } from './severity';
 import { LAYER_STYLES } from './layers';
-import type { GeoItem, LayerId, Quote } from './types';
+import type { EnergyResult, GeoItem, LayerId, Quote } from './types';
 
 const rgb = (c: [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`;
 const esc = (s: string) =>
@@ -233,22 +233,43 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
         })
         .join('');
     },
-    setEnergy(quotes: Quote[]) {
+    setEnergy(quotes: Quote[], energy?: EnergyResult | null) {
       const byName = (n: string) => quotes.find((q) => q.name === n);
-      const stat = (label: string, q?: Quote, muted = false) => `
-        <div class="bigstat ${muted ? 'muted' : ''}">
+      const price = (label: string, q?: Quote) => `
+        <div class="bigstat">
           <div class="l">${label}</div>
           <div class="v">${q ? q.price.toLocaleString() : '—'}</div>
-          <div class="u">${q ? q.unit : 'connect EIA'}</div>
+          <div class="u">${q ? q.unit : ''}</div>
         </div>`;
+      const eia = energy?.available ? energy.series : [];
+      const fund = (label: string, key: string) => {
+        const s = eia.find((x) => x.key === key);
+        const has = !!s && s.value != null;
+        const wow =
+          s && s.changePct != null
+            ? ` <span class="wow ${s.changePct >= 0 ? 'up' : 'dn'}">${s.changePct >= 0 ? '+' : ''}${s.changePct}% WoW</span>`
+            : '';
+        return `
+        <div class="bigstat ${has ? '' : 'muted'}">
+          <div class="l">${label}</div>
+          <div class="v">${has ? Math.round(s!.value as number).toLocaleString() : '—'}${wow}</div>
+          <div class="u">${has ? s!.unit : 'connect EIA'}</div>
+        </div>`;
+      };
       body('energy').innerHTML = `
         <div class="stat-grid">
-          ${stat('WTI Crude', byName('WTI Crude'))}
-          ${stat('Brent', byName('Brent'))}
-          ${stat('Henry Hub', byName('Nat Gas'))}
-          ${stat('US Crude Stocks', undefined, true)}
+          ${price('WTI Crude', byName('WTI Crude'))}
+          ${price('Brent', byName('Brent'))}
+          ${price('Henry Hub', byName('Nat Gas'))}
+          ${fund('US Crude Stocks', 'crude')}
+          ${fund('Nat Gas Storage', 'natgas')}
+          ${fund('SPR Crude', 'spr')}
         </div>
-        <div class="note">Prices live (delayed) · US crude/nat-gas inventories & SPR light up when an <b>EIA_API_KEY</b> is set (free at eia.gov/opendata).</div>`;
+        <div class="note">${
+          energy?.available
+            ? `EIA weekly · as of ${energy.asOf ?? '—'} · prices delayed`
+            : `Prices live (delayed) · US inventories, storage & SPR appear when an <b>EIA_API_KEY</b> is set (free at eia.gov/opendata)`
+        }</div>`;
     },
   };
 }

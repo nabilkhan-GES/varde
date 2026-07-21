@@ -6,6 +6,7 @@ import { buildLayers, withinWindow } from './layers';
 import { renderCards, renderCommandBar, renderLayerPanel, renderMapBar } from './ui';
 import type {
   ClassViResult,
+  EnergyResult,
   FlightResult,
   GeoItem,
   HazardResult,
@@ -107,12 +108,13 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv] = await Promise.all([
+    const [news, haz, fly, mk, cv, en] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
       getJson<MarketResult>(feedUrl('markets')),
       getJson<ClassViResult>(feedUrl('classvi')),
+      getJson<EnergyResult>(feedUrl('energy')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -124,8 +126,8 @@ async function refresh() {
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);
-      cards.setEnergy(quotes);
     }
+    cards.setEnergy(quotes, en);
     draw();
     cmd.setLive(Date.now());
   } finally {
