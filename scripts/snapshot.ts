@@ -11,6 +11,7 @@ import { handler as markets } from '../src/server/routes/markets';
 import { handler as classvi } from '../src/server/routes/classvi';
 import { handler as energy } from '../src/server/routes/energy';
 import { handler as inventories } from '../src/server/routes/inventories';
+import { handler as trackers } from '../src/server/routes/trackers';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -23,6 +24,7 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['classvi', classvi, { wells: [], asOf: '', note: '' }],
   ['energy', energy, { available: false, series: [] }],
   ['inventories', inventories, { available: false, series: [] }],
+  ['trackers', trackers, { asOf: '', note: '', pipelines: [], storage: [], crisis: [] }],
 ];
 
 let failures = 0;

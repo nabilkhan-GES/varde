@@ -1,6 +1,17 @@
 import { severityColor } from './severity';
 import { LAYER_STYLES } from './layers';
-import type { EnergyResult, GeoItem, InventoriesResult, InventorySeries, LayerId, Quote } from './types';
+import type {
+  CrisisRow,
+  EnergyResult,
+  GeoItem,
+  InventoriesResult,
+  InventorySeries,
+  LayerId,
+  PipelineRow,
+  Quote,
+  StorageRow,
+  TrackersResult,
+} from './types';
 
 const rgb = (c: [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`;
 const esc = (s: string) =>
@@ -195,7 +206,10 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="inventories"><div class="card-h"><span class="t">Oil Inventories</span><span class="q" title="EIA weekly stocks — commercial crude, SPR, total oil & Lower-48 nat-gas working storage">ⓘ</span><span class="n" data-n></span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="signal"><div class="card-h"><span class="t">Signal · Incidents / Conflict / Cyber</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="hazards"><div class="card-h"><span class="t">Hazards & Disasters</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
-    <div class="card" data-card="classvi"><div class="card-h"><span class="t">Class VI · CCUS Tracker</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>`;
+    <div class="card" data-card="classvi"><div class="card-h"><span class="t">Class VI · CCUS Tracker</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="pipelines"><div class="card-h"><span class="t">Oil &amp; Gas Pipeline Status</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="storage"><div class="card-h"><span class="t">Strategic Storage Atlas</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
 
   const body = (card: string) => el.querySelector(`[data-card="${card}"] [data-b]`) as HTMLElement;
   const num = (card: string) => el.querySelector(`[data-card="${card}"] [data-n]`) as HTMLElement;
@@ -316,5 +330,76 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
         inv.series.map(chartRow).join('') +
         `<div class="note">EIA weekly · as of ${inv.asOf ?? '—'} · commercial = crude excluding SPR</div>`;
     },
+    setTrackers(t?: TrackersResult | null) {
+      const cap = (c: number | null, u: string) => (c != null ? `${c.toLocaleString()} ${esc(u)}` : '—');
+      const stat = (s: string) => `<span class="st ${statusClass(s)}">${esc(s)}</span>`;
+
+      // Oil & gas pipeline status
+      const pipes = t?.pipelines ?? [];
+      num('pipelines').textContent = pipes.length ? String(pipes.length) : '';
+      body('pipelines').innerHTML = pipes.length
+        ? `<div class="trk trk-pipe"><div class="trk-h"><span>Asset</span><span>Route</span><span>Capacity</span><span>Status</span></div>` +
+          pipes
+            .map(
+              (p: PipelineRow) => `<div class="trk-r" title="${esc(p.note ?? p.operator ?? '')}">
+                <span class="trk-nm">${esc(p.name)}</span>
+                <span class="trk-sub">${esc(p.from)} → ${esc(p.to)}</span>
+                <span class="trk-cap">${cap(p.capacity, p.unit)}</span>
+                ${stat(p.status)}</div>`,
+            )
+            .join('') +
+          `</div>`
+        : `<div class="empty">—</div>`;
+
+      // Strategic storage atlas
+      const stg = t?.storage ?? [];
+      num('storage').textContent = stg.length ? String(stg.length) : '';
+      body('storage').innerHTML = stg.length
+        ? `<div class="trk trk-store"><div class="trk-h"><span>Facility</span><span>Country · Type</span><span>Capacity</span><span>Status</span></div>` +
+          stg
+            .map(
+              (s: StorageRow) => `<div class="trk-r" title="${esc(s.note ?? s.operator ?? '')}">
+                <span class="trk-nm">${esc(s.name)}</span>
+                <span class="trk-sub">${esc(s.country)} · ${esc(s.type)}</span>
+                <span class="trk-cap">${cap(s.capacity, s.unit)}</span>
+                ${stat(s.status)}</div>`,
+            )
+            .join('') +
+          `</div>`
+        : `<div class="empty">—</div>`;
+
+      // Energy crisis registry
+      const cr = t?.crisis ?? [];
+      num('crisis').textContent = cr.length ? String(cr.length) : '';
+      body('crisis').innerHTML = cr.length
+        ? `<div class="trk trk-crisis"><div class="trk-h"><span>Country</span><span>Product</span><span>Since</span><span>Severity</span></div>` +
+          cr
+            .map(
+              (c: CrisisRow) => `<div class="trk-r" title="${esc(c.note ?? '')}">
+                <span class="trk-nm">${esc(c.country)}</span>
+                <span class="trk-sub">${esc(c.product)}</span>
+                <span class="trk-cap">${esc(c.since)}</span>
+                <span class="st ${crisisClass(c.severity)}">${esc(c.severity)}</span></div>`,
+            )
+            .join('') +
+          (t?.note ? `<div class="note">${esc(t.note)}</div>` : '') +
+          `</div>`
+        : `<div class="empty">—</div>`;
+    },
   };
+}
+
+// Status → semantic color class (green ok · amber warn · red bad · dim).
+function statusClass(s: string): string {
+  const v = s.toLowerCase();
+  if (v === 'operating' || v === 'active') return 'ok';
+  if (v === 'reduced' || v === 'idle') return 'warn';
+  if (v === 'offline' || v === 'closed') return 'bad';
+  return 'dim';
+}
+function crisisClass(s: string): string {
+  const v = s.toLowerCase();
+  if (v === 'high') return 'bad';
+  if (v === 'medium') return 'warn';
+  return 'dim';
 }

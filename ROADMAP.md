@@ -15,9 +15,18 @@
 - **Cross-layer story dedupe:** SHIPPED. `dedupeStories()` (`src/server/news.ts`) unions
   items sharing a canonical URL or normalized title (disjoint-set), keeping the
   highest-severity copy, so one event isn't double-plotted across incidents/conflict/cyber.
-- **Weather polygons:** SHIPPED. NWS alert areas render as a filled deck `GeoJsonLayer`
-  beneath the point layers (`src/layers.ts`); geometry is carried on `GeoItem.polygon`,
-  coordinate-rounded in `hazards.ts` to keep the Pages snapshot lean.
+- **Weather polygons + storm rings:** SHIPPED. NWS alert areas render as a filled deck
+  `GeoJsonLayer` beneath the point layers (`src/layers.ts`); geometry is carried on
+  `GeoItem.polygon`, coordinate-rounded in `hazards.ts` to keep the Pages snapshot lean.
+  Cyclones get a generated impact ring scaled by real NHC sustained wind (a wind-field
+  footprint — the official forecast cone is shapefile/KMZ-only, so not the true cone).
+- **Oil Inventories panel:** SHIPPED (`src/server/routes/inventories.ts`, EIA, key-gated).
+  ~53-week history of commercial crude, SPR, total oil (commercial+SPR) and Lower-48
+  nat-gas working storage, rendered as filled area charts with WoW deltas.
+- **Curated trackers:** SHIPPED (`src/server/data/trackers.json`, `routes/trackers.ts`).
+  Oil & gas pipeline status, strategic storage atlas, and an energy-supply crisis registry
+  as sourced, dated snapshots (same model as Class VI — NOT live). Swap for live feeds later.
+- **Dense tables:** Signal & Hazards drill-downs are now columnar tables (Event/Type/Sev/Age).
 - **GDELT DOC 2.0 (sourcecountry geo):** BUILT but OFF by default (`src/server/gdelt.ts`,
   gate `VARDE_GDELT=1`). Evaluated for the incidents layer; its full-text matching is too
   loose (energy terms collide with data/sales "pipelines" etc.) and it rate-limits to

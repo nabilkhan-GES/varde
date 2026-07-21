@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "asOf": "2026-Q2",
+    "note": "Curated snapshot compiled from public sources (operators, EIA, US DOE, IEA, ENTSOG, press). NOT live and NOT exhaustive. Capacities are nameplate/widely-cited figures; status reflects broad public reporting — verify current state with the operator or agency before relying on it.",
+    "sources": {
+      "spr": "US DOE — energy.gov/ceser/strategic-petroleum-reserve",
+      "stocks": "US EIA — eia.gov",
+      "pipelines": "Operators / EIA / ENTSOG",
+      "crisis": "IEA / national grid operators / press"
+    }
+  },
+  "pipelines": [
+    { "name": "Druzhba", "from": "Russia", "to": "Hungary · Slovakia · Czechia", "capacity": 1.4, "unit": "Mb/d", "status": "reduced", "operator": "Transneft", "note": "EU seaborne crude ban; southern leg still supplies Hungary & Slovakia" },
+    { "name": "Nord Stream 1", "from": "Russia", "to": "Germany", "capacity": 55, "unit": "bcm/yr", "status": "offline", "operator": "Nord Stream AG", "note": "Offline since the Sept 2022 sabotage" },
+    { "name": "Nord Stream 2", "from": "Russia", "to": "Germany", "capacity": 55, "unit": "bcm/yr", "status": "offline", "operator": "Nord Stream 2 AG", "note": "Never certified; one line damaged in 2022" },
+    { "name": "TurkStream", "from": "Russia", "to": "Turkey · SE Europe", "capacity": 31.5, "unit": "bcm/yr", "status": "operating", "operator": "Gazprom" },
+    { "name": "Power of Siberia", "from": "Russia", "to": "China", "capacity": 38, "unit": "bcm/yr", "status": "operating", "operator": "Gazprom" },
+    { "name": "Yamal–Europe", "from": "Russia", "to": "Poland · Germany", "capacity": 33, "unit": "bcm/yr", "status": "idle", "operator": "Gazprom / EuRoPol", "note": "Largely idle since 2022" },
+    { "name": "ESPO", "from": "Russia", "to": "China · Kozmino", "capacity": 1.6, "unit": "Mb/d", "status": "operating", "operator": "Transneft" },
+    { "name": "Trans-Alaska (TAPS)", "from": "North Slope, AK", "to": "Valdez, AK", "capacity": 2.1, "unit": "Mb/d", "status": "operating", "operator": "Alyeska", "note": "~0.5 Mb/d actual throughput vs 2.1 nameplate" },
+    { "name": "Keystone", "from": "Alberta", "to": "US Midwest · Gulf", "capacity": 0.62, "unit": "Mb/d", "status": "operating", "operator": "South Bow (ex-TC Energy)" },
+    { "name": "Colonial", "from": "US Gulf Coast", "to": "US Northeast", "capacity": 2.5, "unit": "Mb/d", "status": "operating", "operator": "Colonial Pipeline Co.", "note": "Refined products; hit by 2021 ransomware shutdown" },
+    { "name": "Baku–Tbilisi–Ceyhan", "from": "Azerbaijan", "to": "Ceyhan, Turkey", "capacity": 1.2, "unit": "Mb/d", "status": "operating", "operator": "BP-led consortium" },
+    { "name": "Trans Mountain", "from": "Alberta", "to": "BC coast", "capacity": 0.89, "unit": "Mb/d", "status": "operating", "operator": "Trans Mountain Corp.", "note": "Expansion (TMX) online 2024" },
+    { "name": "TransMed (Enrico Mattei)", "from": "Algeria", "to": "Italy via Tunisia", "capacity": 33.5, "unit": "bcm/yr", "status": "operating", "operator": "Sonatrach / Eni" },
+    { "name": "Medgaz", "from": "Algeria", "to": "Spain", "capacity": 10.5, "unit": "bcm/yr", "status": "operating", "operator": "Sonatrach / Naturgy" },
+    { "name": "Maghreb–Europe (GME)", "from": "Algeria", "to": "Spain via Morocco", "capacity": 12, "unit": "bcm/yr", "status": "closed", "operator": "Sonatrach", "note": "Closed Oct 2021 amid the Algeria–Morocco rift" },
+    { "name": "Trans Adriatic (TAP)", "from": "Greece", "to": "Italy", "capacity": 10, "unit": "bcm/yr", "status": "operating", "operator": "TAP AG", "note": "Southern Gas Corridor; Azeri gas to the EU" },
+    { "name": "Arab Gas Pipeline", "from": "Egypt", "to": "Jordan · Syria · Lebanon", "capacity": 10, "unit": "bcm/yr", "status": "reduced", "operator": "multi-state", "note": "Repeated outages and attacks" }
+  ],
+  "storage": [
+    { "name": "SPR — Bryan Mound", "country": "US · TX", "type": "SPR", "capacity": 254, "unit": "MMbbl", "status": "active", "operator": "US DOE" },
+    { "name": "SPR — West Hackberry", "country": "US · LA", "type": "SPR", "capacity": 227, "unit": "MMbbl", "status": "active", "operator": "US DOE" },
+    { "name": "SPR — Big Hill", "country": "US · TX", "type": "SPR", "capacity": 170, "unit": "MMbbl", "status": "active", "operator": "US DOE" },
+    { "name": "SPR — Bayou Choctaw", "country": "US · LA", "type": "SPR", "capacity": 76, "unit": "MMbbl", "status": "active", "operator": "US DOE" },
+    { "name": "Cushing hub", "country": "US · OK", "type": "commercial", "capacity": 98, "unit": "MMbbl", "status": "active", "operator": "multiple", "note": "WTI delivery point; working capacity" },
+    { "name": "ARA hub", "country": "Netherlands · Belgium", "type": "products", "capacity": null, "unit": "", "status": "active", "operator": "multiple", "note": "Amsterdam–Rotterdam–Antwerp trading hub" },
+    { "name": "Fujairah", "country": "UAE", "type": "products", "capacity": null, "unit": "", "status": "active", "operator": "multiple", "note": "Bunkering & storage hub outside Hormuz" },
+    { "name": "Saldanha Bay", "country": "South Africa", "type": "crude", "capacity": 45, "unit": "MMbbl", "status": "active", "operator": "multiple" },
+    { "name": "Singapore", "country": "Singapore", "type": "products", "capacity": null, "unit": "", "status": "active", "operator": "multiple", "note": "Asia's main storage & trading hub" },
+    { "name": "Ras Tanura / Juaymah", "country": "Saudi Arabia", "type": "export", "capacity": null, "unit": "", "status": "active", "operator": "Saudi Aramco" }
+  ],
+  "crisis": [
+    { "country": "Cuba", "product": "electricity · diesel", "since": "2024", "severity": "high", "note": "Repeated nationwide grid collapses" },
+    { "country": "Lebanon", "product": "electricity · fuel", "since": "2021", "severity": "high", "note": "Chronic power crisis; minimal state grid" },
+    { "country": "Venezuela", "product": "refined fuels", "since": "2019", "severity": "high", "note": "Refining collapse despite vast crude reserves" },
+    { "country": "Nigeria", "product": "gasoline", "since": "2023", "severity": "medium", "note": "Fuel-subsidy removal; supply volatility" },
+    { "country": "Pakistan", "product": "LNG · power", "since": "2022", "severity": "medium", "note": "Import affordability; scheduled load-shedding" },
+    { "country": "South Africa", "product": "electricity", "since": "2022", "severity": "medium", "note": "Eskom load-shedding (eased through 2024)" },
+    { "country": "Sri Lanka", "product": "fuel", "since": "2022", "severity": "low", "note": "Acute 2022 crisis; since stabilized" },
+    { "country": "European Union", "product": "natural gas", "since": "2022", "severity": "low", "note": "Post-Nord Stream shock; largely normalized via LNG" }
+  ]
+}

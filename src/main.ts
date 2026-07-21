@@ -16,6 +16,7 @@ import type {
   MarketResult,
   NewsResult,
   Quote,
+  TrackersResult,
 } from './types';
 
 const REFRESH_MS = 60_000;
@@ -109,7 +110,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -117,6 +118,7 @@ async function refresh() {
       getJson<ClassViResult>(feedUrl('classvi')),
       getJson<EnergyResult>(feedUrl('energy')),
       getJson<InventoriesResult>(feedUrl('inventories')),
+      getJson<TrackersResult>(feedUrl('trackers')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -131,6 +133,7 @@ async function refresh() {
     }
     cards.setEnergy(quotes, en);
     cards.setInventories(inv);
+    cards.setTrackers(trk);
     draw();
     cmd.setLive(Date.now());
   } finally {

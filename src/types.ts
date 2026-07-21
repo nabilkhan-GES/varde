@@ -100,3 +100,38 @@ export interface InventoriesResult {
   series: InventorySeries[];
   asOf?: string;
 }
+
+export interface PipelineRow {
+  name: string;
+  from: string;
+  to: string;
+  capacity: number | null;
+  unit: string;
+  status: string; // operating | reduced | idle | offline | closed
+  operator?: string;
+  note?: string;
+}
+export interface StorageRow {
+  name: string;
+  country: string;
+  type: string; // SPR | commercial | products | crude | export
+  capacity: number | null;
+  unit: string;
+  status: string;
+  operator?: string;
+  note?: string;
+}
+export interface CrisisRow {
+  country: string;
+  product: string;
+  since: string;
+  severity: string; // high | medium | low
+  note?: string;
+}
+export interface TrackersResult {
+  asOf: string;
+  note: string;
+  pipelines: PipelineRow[];
+  storage: StorageRow[];
+  crisis: CrisisRow[];
+}
