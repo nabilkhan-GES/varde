@@ -1,5 +1,5 @@
-// Energy markets ticker — Yahoo Finance chart endpoint (free, no key). Change is
-// computed vs. previous close. Swap to EIA spot prices when EIA_API_KEY is set.
+// Energy markets ticker + sparklines — Yahoo Finance chart endpoint (free, no
+// key). Change is vs. previous close; spark is ~30 daily closes for a mini chart.
 import { cached, fetchJson } from '../util';
 import type { MarketResult, Quote } from '../../types';
 
@@ -22,12 +22,21 @@ export async function handler(): Promise<MarketResult> {
 }
 
 async function quote(s: { sym: string; name: string; unit: string }): Promise<Quote> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.sym)}`;
+  const url =
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.sym)}` +
+    `?range=1mo&interval=1d`;
   const data = await fetchJson<any>(url, 9000);
-  const meta = data?.chart?.result?.[0]?.meta ?? {};
+  const result = data?.chart?.result?.[0] ?? {};
+  const meta = result.meta ?? {};
   const price = Number(meta.regularMarketPrice);
-  const prev = Number(meta.chartPreviousClose ?? meta.previousClose);
   if (!Number.isFinite(price)) throw new Error(`no price for ${s.sym}`);
+  const closes: number[] = (result.indicators?.quote?.[0]?.close ?? [])
+    .filter((v: unknown): v is number => typeof v === 'number' && Number.isFinite(v))
+    .slice(-30);
+  // Day change = live price vs the prior daily close (chartPreviousClose spans the
+  // whole range, so it gives a monthly delta — use the series instead).
+  const prev =
+    closes.length >= 2 ? closes[closes.length - 2] : Number(meta.chartPreviousClose ?? meta.previousClose);
   const changePct = Number.isFinite(prev) && prev > 0 ? ((price - prev) / prev) * 100 : 0;
   return {
     symbol: s.sym,
@@ -35,5 +44,6 @@ async function quote(s: { sym: string; name: string; unit: string }): Promise<Qu
     unit: s.unit,
     price: Math.round(price * 100) / 100,
     changePct: Math.round(changePct * 100) / 100,
+    spark: closes,
   };
 }

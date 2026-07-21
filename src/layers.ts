@@ -26,16 +26,23 @@ export const LAYER_STYLES: LayerStyle[] = [
   { id: 'incidents', label: 'Energy incidents', color: [249, 115, 22], hex: '#f97316' },
 ];
 
+/** Keep items with no timestamp (reference data) or within the time window. */
+export function withinWindow(items: GeoItem[], sinceMs: number): GeoItem[] {
+  if (!sinceMs) return items;
+  return items.filter((d) => !d.ts || d.ts >= sinceMs);
+}
+
 export function buildLayers(
   data: LayerData,
   visible: Record<LayerId, boolean>,
   onPick: (item: GeoItem) => void,
+  sinceMs = 0,
 ): Layer[] {
   return LAYER_STYLES.map(
     (s) =>
       new ScatterplotLayer<GeoItem>({
         id: s.id,
-        data: data[s.id] ?? [],
+        data: withinWindow(data[s.id] ?? [], sinceMs),
         visible: visible[s.id],
         pickable: true,
         radiusUnits: 'pixels',

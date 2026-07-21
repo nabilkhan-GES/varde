@@ -4,18 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <title>Varde — Energy Situational Awareness</title>
-    <meta name="description" content="Real-time energy situational-awareness dashboard: incidents, natural hazards, seismicity and energy markets on one live map." />
+    <meta name="description" content="Real-time energy situational-awareness monitor: incidents, conflict, cyber, hazards, seismicity, weather, aircraft, Class VI CCUS and energy markets on one live map." />
   </head>
   <body>
     <div id="app">
-      <header id="topbar"></header>
+      <header id="cmdbar"></header>
       <main id="stage">
-        <div id="map"></div>
-        <aside id="radar" aria-label="Incident radar"></aside>
-        <aside id="classvi" aria-label="Class VI CCUS tracker"></aside>
+        <section id="mappane">
+          <div id="mapbar"></div>
+          <div id="map"></div>
+          <aside id="layerpanel" aria-label="Map layers"></aside>
+        </section>
+        <aside id="cards" aria-label="Data panels"></aside>
       </main>
-      <div id="layerbar" role="group" aria-label="Map layers"></div>
-      <div id="markets" aria-label="Energy markets"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

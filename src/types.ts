@@ -31,6 +31,7 @@ export interface Quote {
   unit: string;
   price: number;
   changePct: number;
+  spark: number[];
 }
 
 export type LayerData = Record<LayerId, GeoItem[]>;
