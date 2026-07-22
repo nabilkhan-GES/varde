@@ -98,9 +98,9 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Right card grid ─────────────────────────────────── */
 #cards {
-  flex: 0 0 48%; max-width: 980px; min-width: 540px; overflow-y: auto;
+  flex: 0 0 54%; max-width: 1240px; min-width: 640px; overflow-y: auto;
   border-left: 1px solid var(--line);
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; align-content: start;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; align-content: start;
   background: var(--line);
 }
 .card { background: var(--panel); display: flex; flex-direction: column; min-height: 0; }
@@ -191,14 +191,23 @@ a { color: inherit; text-decoration: none; }
 .st.dim { color: var(--faint); }
 .trk .note { padding: 9px 12px 4px; margin: 0; }
 
-.maplibregl-popup-content { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2); border-radius: 4px; padding: 11px 13px; max-width: 270px; font-family: var(--sans); }
-.maplibregl-popup-content .pt { font-size: 13px; line-height: 1.4; margin-bottom: 6px; }
+.maplibregl-popup-content {
+  background: var(--panel-2) !important; color: var(--ink) !important;
+  border: 1px solid var(--line-2); border-radius: 4px; padding: 11px 28px 11px 13px;
+  max-width: 280px; font-family: var(--sans); box-shadow: 0 6px 22px rgba(0,0,0,0.55);
+}
+.maplibregl-popup-content .pt { font-size: 13px; line-height: 1.4; margin-bottom: 6px; color: var(--ink); }
 .maplibregl-popup-content .pm { font-family: var(--mono); font-size: 10px; color: var(--dim); }
 .maplibregl-popup-content a { color: var(--accent); font-size: 11px; }
+.maplibregl-popup-close-button { color: var(--dim); font-size: 16px; padding: 0 5px; right: 1px; }
+.maplibregl-popup-close-button:hover { background: transparent; color: var(--ink); }
 .maplibregl-popup-tip { display: none; }
 
-@media (max-width: 1180px) {
-  #cards { flex-basis: 46%; min-width: 360px; grid-template-columns: 1fr; }
+@media (max-width: 1500px) {
+  #cards { flex-basis: 52%; min-width: 460px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1080px) {
+  #cards { flex-basis: 46%; min-width: 340px; grid-template-columns: 1fr; }
   .card.wide { grid-column: auto; }
 }
 @media (max-width: 680px) {

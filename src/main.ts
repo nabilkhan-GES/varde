@@ -1,5 +1,6 @@
-import './style.css';
+// maplibre CSS first, then ours — so our dark popup/control overrides win.
 import 'maplibre-gl/dist/maplibre-gl.css';
+import './style.css';
 import maplibregl from 'maplibre-gl';
 import { createMap } from './map';
 import { buildLayers, withinWindow } from './layers';
