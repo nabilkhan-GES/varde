@@ -69,6 +69,9 @@ a { color: inherit; text-decoration: none; }
 .seg button:last-child { border-right: 0; }
 .seg button.on { background: var(--accent); color: #04070a; font-weight: 700; }
 .seg button:not(.on):hover { color: var(--ink); }
+.tgl { background: transparent; border: 1px solid var(--line-2); border-radius: 3px; color: var(--dim); font-family: var(--mono); font-size: 10.5px; padding: 4px 9px; cursor: pointer; }
+.tgl:hover { color: var(--ink); }
+.tgl.on { background: var(--accent-2); border-color: var(--accent-2); color: #04070a; font-weight: 700; }
 #map { position: absolute; top: 34px; left: 0; right: 0; bottom: 0; }
 .maplibregl-ctrl-attrib { font-size: 9px; }
 

@@ -27,6 +27,16 @@
   Oil & gas pipeline status, strategic storage atlas, and an energy-supply crisis registry
   as sourced, dated snapshots (same model as Class VI — NOT live). Swap for live feeds later.
 - **Dense tables:** Signal & Hazards drill-downs are now columnar tables (Event/Type/Sev/Age).
+- **3-column tile grid:** right rail is a 3→2→1 responsive grid; Markets is a full-width ticker.
+- **Doppler radar:** SHIPPED. RainViewer keyless raster overlay (native MapLibre raster
+  layer, 5-min refresh, isSourceLoaded guard) — map-bar "Radar" toggle.
+- **Aircraft icons:** SHIPPED. Flights render as a deck `IconLayer` (inline plane SVG,
+  mask+tint), rotated by heading and colored by altitude, pixel-clamped.
+- **Clean markers:** all scatter radii clamped in pixels (min 3 / max ~11) so nothing
+  balloons; storm rings softened to faint outlines.
+- **Day/night terminator:** SHIPPED. Client-computed subsolar terminator as a deck
+  `PolygonLayer` (keyless) — map-bar "Day/Night" toggle.
+- **Popup legibility fix:** maplibre CSS now loads before ours, so the dark popup wins.
 - **GDELT DOC 2.0 (sourcecountry geo):** BUILT but OFF by default (`src/server/gdelt.ts`,
   gate `VARDE_GDELT=1`). Evaluated for the incidents layer; its full-text matching is too
   loose (energy terms collide with data/sales "pipelines" etc.) and it rate-limits to

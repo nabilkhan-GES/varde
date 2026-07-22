@@ -39,12 +39,15 @@ let quotes: Quote[] = [];
 const { map, overlay } = createMap(document.getElementById('map')!);
 let popup: maplibregl.Popup | null = null;
 
+let dayNight = false;
+
 const cmd = renderCommandBar(document.getElementById('cmdbar')!, () => void refresh());
-renderMapBar(
-  document.getElementById('mapbar')!,
-  (ms) => { sinceMs = ms; draw(); },
-  (dim) => map.easeTo({ pitch: dim === '3d' ? 55 : 0, duration: 600 }),
-);
+renderMapBar(document.getElementById('mapbar')!, {
+  onRange: (ms) => { sinceMs = ms; draw(); },
+  onDim: (dim) => map.easeTo({ pitch: dim === '3d' ? 55 : 0, duration: 600 }),
+  onRadar: (on) => void setRadar(on),
+  onDayNight: (on) => { dayNight = on; draw(); },
+});
 const layerPanel = renderLayerPanel(document.getElementById('layerpanel')!, visible, (id, on) => {
   visible[id] = on;
   draw();
@@ -68,7 +71,9 @@ function counts(): Record<LayerId, number> {
 }
 
 function draw() {
-  overlay.setProps({ layers: buildLayers(data, visible, focusItem, sinceMs) });
+  overlay.setProps({
+    layers: buildLayers(data, visible, focusItem, { sinceMs, dayNight, nowMs: Date.now() }),
+  });
   const signal = collect(SIGNAL_LAYERS);
   cards.setSignal(signal);
   cards.setHazards(collect(HAZARD_LAYERS));
@@ -88,6 +93,52 @@ function focusItem(it: GeoItem) {
         (it.url ? `<a href="${it.url}" target="_blank" rel="noopener">source ↗</a>` : ''),
     )
     .addTo(map);
+}
+
+// ── RainViewer doppler radar — keyless animated raster tiles (worldmonitor
+// pattern). Native MapLibre raster layer, not deck; refreshed every 5 min. ──
+const RADAR_SRC = 'wx-radar';
+const RADAR_LAYER = 'wx-radar-layer';
+let radarTimer: number | null = null;
+
+async function radarTileTemplate(): Promise<string | null> {
+  try {
+    const r = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    if (!r.ok) return null;
+    const j: any = await r.json();
+    const past = j?.radar?.past;
+    const latest = Array.isArray(past) && past.length ? past[past.length - 1] : null;
+    return latest ? `${j.host}${latest.path}/256/{z}/{x}/{y}/6/1_1.png` : null;
+  } catch {
+    return null;
+  }
+}
+
+async function applyRadar() {
+  const tmpl = await radarTileTemplate();
+  if (!tmpl) return;
+  const src = map.getSource(RADAR_SRC) as any;
+  if (src) {
+    // setTiles mid texture-load crashes the render frame — guard on load state.
+    if (map.isSourceLoaded(RADAR_SRC)) src.setTiles([tmpl]);
+    else map.once('idle', () => (map.getSource(RADAR_SRC) as any)?.setTiles([tmpl]));
+    return;
+  }
+  map.addSource(RADAR_SRC, { type: 'raster', tiles: [tmpl], tileSize: 256, attribution: '© RainViewer' });
+  map.addLayer({ id: RADAR_LAYER, type: 'raster', source: RADAR_SRC, paint: { 'raster-opacity': 0.6 } });
+}
+
+async function setRadar(on: boolean) {
+  if (on) {
+    const go = () => void applyRadar();
+    if (map.isStyleLoaded()) go();
+    else map.once('style.load', go);
+    radarTimer = window.setInterval(() => void applyRadar(), 5 * 60 * 1000);
+  } else {
+    if (radarTimer) { clearInterval(radarTimer); radarTimer = null; }
+    if (map.getLayer(RADAR_LAYER)) map.removeLayer(RADAR_LAYER);
+    if (map.getSource(RADAR_SRC)) map.removeSource(RADAR_SRC);
+  }
 }
 
 async function getJson<T>(url: string): Promise<T | null> {

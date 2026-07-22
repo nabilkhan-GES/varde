@@ -1,7 +1,37 @@
-import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, IconLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import { severityRadius } from './severity';
 import type { GeoItem, LayerData, LayerId } from './types';
+
+// A crisp airplane silhouette (points north), white so deck.gl's getColor can
+// tint it via mask:true — one icon recolored per aircraft by altitude.
+const PLANE_ICON =
+  'data:image/svg+xml;base64,' +
+  btoa(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
+      '<path d="M16 2 L17.4 13 L29 20 L29 22.4 L17.4 18.6 L17.4 26 L21 29 L21 30.6 L16 29 L11 30.6 L11 29 L14.6 26 L14.6 18.6 L3 22.4 L3 20 L14.6 13 Z" fill="white"/>' +
+      '</svg>',
+  );
+
+// Altitude (ft) → color: low warm grey/amber → high cool cyan/violet.
+const ALT_STOPS: Array<[number, [number, number, number]]> = [
+  [0, [148, 163, 184]],
+  [10000, [234, 179, 8]],
+  [25000, [56, 189, 248]],
+  [40000, [139, 92, 246]],
+];
+function altitudeToColor(ft: number): [number, number, number] {
+  if (!Number.isFinite(ft)) return [148, 163, 184];
+  for (let i = 1; i < ALT_STOPS.length; i++) {
+    const [hi, chi] = ALT_STOPS[i];
+    if (ft <= hi) {
+      const [lo, clo] = ALT_STOPS[i - 1];
+      const t = (ft - lo) / (hi - lo || 1);
+      return [0, 1, 2].map((k) => Math.round(clo[k] + (chi[k] - clo[k]) * t)) as [number, number, number];
+    }
+  }
+  return ALT_STOPS[ALT_STOPS.length - 1][1];
+}
 
 export interface LayerStyle {
   id: LayerId;
@@ -115,24 +145,114 @@ function stormRingLayer(
     stroked: true,
     filled: true,
     lineWidthUnits: 'pixels',
-    getLineWidth: 1.6,
-    getLineColor: [...STORM_HEX, 230] as [number, number, number, number],
-    getFillColor: [...STORM_HEX, 45] as [number, number, number, number],
+    getLineWidth: 1.2,
+    getLineColor: [...STORM_HEX, 170] as [number, number, number, number],
+    getFillColor: [...STORM_HEX, 18] as [number, number, number, number],
     onClick: onPolyClick(onPick),
   });
+}
+
+// Live aircraft as rotated, altitude-colored plane icons (deck IconLayer),
+// clamped in pixels so they stay crisp at every zoom.
+function flightsIconLayer(
+  data: LayerData,
+  visible: Record<LayerId, boolean>,
+  onPick: (item: GeoItem) => void,
+  sinceMs: number,
+): Layer | null {
+  const flights = withinWindow(data.flights ?? [], sinceMs);
+  if (!visible.flights || flights.length === 0) return null;
+  return new IconLayer<GeoItem>({
+    id: 'flights',
+    data: flights,
+    pickable: true,
+    getPosition: (d) => [d.lon, d.lat],
+    getIcon: () => 'plane',
+    iconAtlas: PLANE_ICON,
+    iconMapping: { plane: { x: 0, y: 0, width: 32, height: 32, mask: true } },
+    getSize: 17,
+    sizeUnits: 'pixels',
+    sizeMinPixels: 9,
+    sizeMaxPixels: 22,
+    billboard: false,
+    getAngle: (d) => -(Number(d.meta?.trackDeg) || 0), // deck rotates CCW; compass is CW
+    getColor: (d) => [...altitudeToColor((Number(d.meta?.altM) || 0) * 3.281), 225] as [number, number, number, number],
+    onClick: (info) => {
+      if (info.object) onPick(info.object as GeoItem);
+    },
+  });
+}
+
+// Day/night terminator — the night hemisphere as a translucent polygon, computed
+// client-side from the sun's subsolar point (no API). Purely cosmetic "live world"
+// depth; drawn at the very bottom so nothing else is dimmed illegibly.
+function dayNightLayer(nowMs: number): Layer {
+  const ring = nightPolygon(nowMs);
+  return new PolygonLayer<{ polygon: number[][] }>({
+    id: 'day-night',
+    data: [{ polygon: ring }],
+    getPolygon: (d) => d.polygon,
+    getFillColor: [4, 8, 16, 96],
+    getLineColor: [40, 60, 90, 120],
+    lineWidthUnits: 'pixels',
+    getLineWidth: 0.8,
+    stroked: true,
+    filled: true,
+    pickable: false,
+  });
+}
+
+// Ring of [lon,lat] enclosing the night side. Uses the standard subsolar-point
+// approximation (declination + equation-of-time-free hour angle) — accurate to a
+// degree or so, which is plenty for a shading overlay.
+function nightPolygon(nowMs: number): number[][] {
+  const d = new Date(nowMs);
+  const rad = Math.PI / 180;
+  // Days since J2000 and solar declination.
+  const jd = nowMs / 86400000 + 2440587.5;
+  const n = jd - 2451545.0;
+  const L = (280.46 + 0.9856474 * n) % 360;
+  const g = ((357.528 + 0.9856003 * n) % 360) * rad;
+  const lambda = (L + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * rad;
+  const decl = Math.asin(Math.sin(23.44 * rad) * Math.sin(lambda)); // sun declination (rad)
+  // Subsolar longitude from UTC time.
+  const utcHours = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600;
+  const subsolarLon = -15 * (utcHours - 12);
+  // Terminator latitude as a function of longitude.
+  const top: number[][] = [];
+  const bottom: number[][] = [];
+  for (let lon = -180; lon <= 180; lon += 3) {
+    const H = (lon - subsolarLon) * rad;
+    const lat = Math.atan(-Math.cos(H) / Math.tan(decl)) / rad;
+    top.push([lon, lat]);
+  }
+  // Close the polygon over whichever pole is in darkness.
+  const poleLat = decl > 0 ? -90 : 90;
+  for (let lon = 180; lon >= -180; lon -= 3) bottom.push([lon, poleLat]);
+  return [...top, ...bottom];
+}
+
+export interface BuildOpts {
+  sinceMs?: number;
+  dayNight?: boolean;
+  nowMs?: number;
 }
 
 export function buildLayers(
   data: LayerData,
   visible: Record<LayerId, boolean>,
   onPick: (item: GeoItem) => void,
-  sinceMs = 0,
+  opts: BuildOpts = {},
 ): Layer[] {
-  const polys = [
+  const { sinceMs = 0, dayNight = false, nowMs = 0 } = opts;
+  const base: Array<Layer | null> = [
+    dayNight ? dayNightLayer(nowMs) : null,
     stormRingLayer(data, visible, onPick, sinceMs),
     weatherPolygonLayer(data, visible, onPick, sinceMs),
-  ].filter((l): l is Layer => l != null);
-  const points = LAYER_STYLES.map(
+  ];
+  // Flights are icons, not dots; the rest are pixel-clamped scatter markers so
+  // they stay small and crisp (no ballooning "big circles") at any zoom.
+  const points = LAYER_STYLES.filter((s) => s.id !== 'flights').map(
     (s) =>
       new ScatterplotLayer<GeoItem>({
         id: s.id,
@@ -140,20 +260,22 @@ export function buildLayers(
         visible: visible[s.id],
         pickable: true,
         radiusUnits: 'pixels',
-        radiusMinPixels: s.id === 'flights' ? 2 : 3,
+        radiusMinPixels: 3,
+        radiusMaxPixels: s.id === 'quakes' ? 13 : 11,
         stroked: true,
         lineWidthUnits: 'pixels',
         getLineWidth: 1,
-        getLineColor: [10, 14, 20, 200],
-        opacity: s.id === 'flights' ? 0.7 : 0.88,
+        getLineColor: [10, 14, 20, 210],
+        opacity: 0.9,
         getPosition: (d: GeoItem) => [d.lon, d.lat],
-        getRadius: (d: GeoItem) => (s.id === 'flights' ? 2.8 : severityRadius(d.severity)),
-        getFillColor: [...s.color, 225] as [number, number, number, number],
+        getRadius: (d: GeoItem) => severityRadius(d.severity),
+        getFillColor: [...s.color, 220] as [number, number, number, number],
         onClick: (info) => {
           if (info.object) onPick(info.object as GeoItem);
         },
       }),
   );
-  // Polygons first (bottom), then all point layers on top.
-  return [...polys, ...points];
+  const flights = flightsIconLayer(data, visible, onPick, sinceMs);
+  // Bottom → top: terminator, area polygons, scatter markers, aircraft icons.
+  return [...base, ...points, flights].filter((l): l is Layer => l != null);
 }

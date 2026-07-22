@@ -98,16 +98,22 @@ const RANGES: Array<[string, number]> = [
   ['48h', 172_800_000], ['7d', 604_800_000], ['All', 0],
 ];
 
-export function renderMapBar(
-  el: HTMLElement,
-  onRange: (ms: number) => void,
-  onDim: (d: '2d' | '3d') => void,
-  defaultRange = 0,
-) {
+export interface MapBarHandlers {
+  onRange: (ms: number) => void;
+  onDim: (d: '2d' | '3d') => void;
+  onRadar: (on: boolean) => void;
+  onDayNight: (on: boolean) => void;
+  defaultRange?: number;
+}
+
+export function renderMapBar(el: HTMLElement, h: MapBarHandlers) {
+  const defaultRange = h.defaultRange ?? 0;
   el.innerHTML = `
     <span class="title">Global Situation</span>
     <span class="clock" data-clock>—</span>
     <div class="spacer"></div>
+    <button class="tgl" data-radar>◊ Radar</button>
+    <button class="tgl" data-daynight>☾ Day/Night</button>
     <div class="seg" data-range>${RANGES.map(([l, ms]) => `<button data-ms="${ms}" class="${ms === defaultRange ? 'on' : ''}">${l}</button>`).join('')}</div>
     <div class="seg" data-dim><button data-d="2d" class="on">2D</button><button data-d="3d">3D</button></div>`;
   const clock = el.querySelector('[data-clock]') as HTMLElement;
@@ -115,16 +121,26 @@ export function renderMapBar(
     b.addEventListener('click', () => {
       el.querySelectorAll('[data-range] button').forEach((x) => x.classList.remove('on'));
       b.classList.add('on');
-      onRange(Number(b.dataset.ms));
+      h.onRange(Number(b.dataset.ms));
     }),
   );
   el.querySelectorAll<HTMLElement>('[data-dim] button').forEach((b) =>
     b.addEventListener('click', () => {
       el.querySelectorAll('[data-dim] button').forEach((x) => x.classList.remove('on'));
       b.classList.add('on');
-      onDim(b.dataset.d as '2d' | '3d');
+      h.onDim(b.dataset.d as '2d' | '3d');
     }),
   );
+  const toggle = (sel: string, cb: (on: boolean) => void) => {
+    const b = el.querySelector<HTMLElement>(sel)!;
+    b.addEventListener('click', () => {
+      const on = !b.classList.contains('on');
+      b.classList.toggle('on', on);
+      cb(on);
+    });
+  };
+  toggle('[data-radar]', h.onRadar);
+  toggle('[data-daynight]', h.onDayNight);
   const tick = () => {
     clock.textContent = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
   };
