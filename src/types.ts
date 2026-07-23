@@ -155,6 +155,27 @@ export interface RenewablesResult {
   world: number | null; // % renewable electricity output
   countries: Array<{ name: string; pct: number }>;
 }
+
+export interface PredictionMarket {
+  question: string;
+  outcome: string; // leading outcome label
+  pct: number; // its probability, 0..100
+  volume: number;
+  url?: string;
+}
+export interface PredictionsResult {
+  markets: PredictionMarket[];
+}
+
+export interface TensionPair {
+  label: string;
+  score: number; // GPR-style tension score (higher = more)
+  trend: number; // change over the window
+  articles: number;
+}
+export interface TensionResult {
+  pairs: TensionPair[];
+}
 export interface MarketResult {
   quotes: Quote[];
 }

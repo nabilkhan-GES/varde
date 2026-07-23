@@ -48,6 +48,9 @@ jobs:
         run: npm run build
         env:
           BASE_PATH: /varde/
+          # Optional: set repo Actions VARIABLE VITE_AIS_RELAY_URL to your deployed
+          # AIS relay URL → the map reads dense live tankers from it.
+          VITE_AIS_RELAY_URL: ${{ vars.VITE_AIS_RELAY_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -22,8 +22,10 @@ import type {
   FuelPricesResult,
   HubWeatherResult,
   MacroResult,
+  PredictionsResult,
   RenewablesResult,
   TankerResult,
+  TensionResult,
   GeoItem,
   HazardResult,
   InventoriesResult,
@@ -260,7 +262,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled, fuel, renew] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled, fuel, renew, tens, preds] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -280,6 +282,8 @@ async function refresh() {
       getJson<AcledResult>(feedUrl('acled')),
       getJson<FuelPricesResult>(feedUrl('fuelprices')),
       getJson<RenewablesResult>(feedUrl('renewables')),
+      getJson<TensionResult>(feedUrl('tension')),
+      getJson<PredictionsResult>(feedUrl('predictions')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -299,6 +303,8 @@ async function refresh() {
     cards.setMacro(macro);
     cards.setFuelPrices(fuel);
     cards.setRenewables(renew);
+    cards.setTension(tens);
+    cards.setPredictions(preds);
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);

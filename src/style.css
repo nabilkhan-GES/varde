@@ -276,7 +276,20 @@ a { color: inherit; text-decoration: none; }
 .barnm { font-size: 10.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bartrack { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
 .barfill { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); border-radius: 4px; }
-.barval { font-size: 10.5px; color: var(--ink); text-align: right; }
+.barfill.bad { background: linear-gradient(90deg, #7f1d1d, var(--sev-hi)); }
+.barfill.warn { background: linear-gradient(90deg, #7c4a12, var(--sev-mid)); }
+.barfill.ok { background: linear-gradient(90deg, var(--accent-dim), var(--accent)); }
+.barval { font-size: 10.5px; color: var(--ink); text-align: right; white-space: nowrap; }
+.barval .ch.up { color: var(--up); }
+.barval .ch.dn { color: var(--down); }
+
+/* prediction markets */
+.pmrow { display: block; padding: 7px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.pmrow:hover { background: var(--panel-2); }
+.pmq { display: block; font-size: 11px; line-height: 1.3; color: var(--ink); font-family: var(--sans); margin-bottom: 5px; }
+.pmbar { display: block; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
+.pmfill { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+.pmpct { display: block; margin-top: 3px; font-size: 9.5px; color: var(--dim); }
 
 /* energy headlines */
 .nzrow { display: grid; grid-template-columns: 62px minmax(0, 1fr) 34px; gap: 9px; align-items: baseline; padding: 7px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }

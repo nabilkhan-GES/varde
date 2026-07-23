@@ -12,7 +12,9 @@ import type {
   HubWeatherResult,
   MacroResult,
   MacroSeries,
+  PredictionsResult,
   RenewablesResult,
+  TensionResult,
   InventoriesResult,
   InventorySeries,
   LayerId,
@@ -287,7 +289,9 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="hubweather"><div class="card-h"><span class="t">Energy Hub Weather</span><span class="q" title="Live temperature at major demand/supply hubs (Open-Meteo) — heat/cold drives power & gas demand">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="macro"><div class="card-h"><span class="t">Macro Drivers</span><span class="q" title="USD, rates & inflation move oil as much as barrels do (FRED — needs a free key)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="fuelprices"><div class="card-h"><span class="t">Retail Fuel Prices</span><span class="q" title="US weekly pump gasoline & diesel (EIA)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
-    <div class="card" data-card="renewables"><div class="card-h"><span class="t">Renewable Electricity</span><span class="q" title="% of electricity output from renewables (World Bank, latest year)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
+    <div class="card" data-card="renewables"><div class="card-h"><span class="t">Renewable Electricity</span><span class="q" title="% of electricity output from renewables (World Bank, latest year)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="tension"><div class="card-h"><span class="t">Geopolitical Tension</span><span class="q" title="GDELT conflict-coverage risk per country pair (higher = more tense)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="predictions"><div class="card-h"><span class="t">Prediction Markets</span><span class="q" title="Live Polymarket odds on energy & geopolitical events">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
 
   const body = (card: string) => el.querySelector(`[data-card="${card}"] [data-b]`) as HTMLElement;
   const num = (card: string) => el.querySelector(`[data-card="${card}"] [data-n]`) as HTMLElement;
@@ -586,6 +590,43 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
           )
           .join('') +
         `<div class="note">World Bank · renewable % of electricity output · ${res?.asOf ?? ''}</div>`;
+    },
+    setTension(res?: TensionResult | null) {
+      const pairs = res?.pairs ?? [];
+      num('tension').textContent = pairs.length ? String(pairs.length) : '';
+      const b = body('tension');
+      if (!pairs.length) {
+        b.innerHTML = `<div class="empty">—</div>`;
+        return;
+      }
+      const max = Math.max(...pairs.map((p) => p.score), 1);
+      b.innerHTML = pairs
+        .map((p) => {
+          const up = p.trend >= 0;
+          const cls = p.score >= max * 0.75 ? 'bad' : p.score >= max * 0.4 ? 'warn' : 'ok';
+          return `<div class="barrow" title="${p.articles.toLocaleString()} articles">
+            <span class="barnm">${esc(p.label)}</span>
+            <span class="bartrack"><span class="barfill ${cls}" style="width:${Math.round((p.score / max) * 100)}%"></span></span>
+            <span class="barval">${p.score.toFixed(1)} <span class="ch ${up ? 'dn' : 'up'}">${up ? '▲' : '▼'}</span></span>
+          </div>`;
+        })
+        .join('') + `<div class="note">GDELT conflict coverage · 21-day · ▲ rising tension</div>`;
+    },
+    setPredictions(res?: PredictionsResult | null) {
+      const markets = res?.markets ?? [];
+      num('predictions').textContent = markets.length ? String(markets.length) : '';
+      const b = body('predictions');
+      b.innerHTML = markets.length
+        ? markets
+            .map(
+              (m) => `<a class="pmrow" ${m.url ? `href="${m.url}" target="_blank" rel="noopener"` : ''}>
+                <span class="pmq">${esc(m.question)}</span>
+                <span class="pmbar"><span class="pmfill" style="width:${Math.round(m.pct)}%"></span></span>
+                <span class="pmpct">${Math.round(m.pct)}% ${esc(m.outcome)}</span>
+              </a>`,
+            )
+            .join('')
+        : `<div class="empty">—</div>`;
     },
     setEnergyNews(res?: EnergyNewsResult | null) {
       const items = res?.items ?? [];
