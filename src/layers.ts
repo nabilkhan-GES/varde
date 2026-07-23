@@ -337,6 +337,65 @@ function cablesLayer(cables: CableLine[]): Layer {
   });
 }
 
+// Deterministic 0..1 phase per route (FNV-1a) so flow dots don't march in lockstep.
+function phaseOf(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000) / 1000;
+}
+
+interface Trip {
+  a: [number, number];
+  b: [number, number];
+  color: [number, number, number];
+  phase: number;
+}
+
+// Dots crawling along bypass + pipeline routes — obvious, low-cost map motion.
+function tripsLayer(
+  visible: Record<LayerId, boolean>,
+  pipelines: PipelineLine[] | undefined,
+  showPipes: boolean,
+  tripsT: number,
+): Layer | null {
+  const trips: Trip[] = [];
+  if (visible.chokepoints) {
+    for (const r of BYPASS_ROUTES) {
+      if (r.from[0] === r.to[0] && r.from[1] === r.to[1]) continue;
+      trips.push({ a: r.from, b: r.to, color: [96, 200, 140], phase: phaseOf(r.label) });
+    }
+  }
+  if (showPipes && pipelines) {
+    for (const p of pipelines) {
+      if (p.status === 'offline' || p.status === 'closed') continue;
+      const a = p.path[0] as [number, number];
+      const b = p.path[p.path.length - 1] as [number, number];
+      trips.push({ a, b, color: PIPE_COLOR[p.status] ?? [148, 163, 184], phase: phaseOf(p.name) });
+    }
+  }
+  if (!trips.length) return null;
+  const cycle = 6000; // ms for a dot to traverse a route
+  return new ScatterplotLayer<Trip>({
+    id: 'trips',
+    data: trips,
+    getPosition: (d) => {
+      const f = (((tripsT + d.phase * cycle) % cycle) / cycle);
+      return [d.a[0] + (d.b[0] - d.a[0]) * f, d.a[1] + (d.b[1] - d.a[1]) * f];
+    },
+    getRadius: 3,
+    radiusUnits: 'pixels',
+    radiusMinPixels: 2,
+    radiusMaxPixels: 4,
+    getFillColor: (d) => [...d.color, 235] as [number, number, number, number],
+    stroked: false,
+    pickable: false,
+    updateTriggers: { getPosition: tripsT },
+  });
+}
+
 // Breathing halo behind the highest-severity events — the "something's happening"
 // cue. An outlined-only ScatterplotLayer whose radiusScale is animated each tick.
 function pulseLayer(
@@ -376,6 +435,8 @@ export interface BuildOpts {
   cables?: CableLine[];
   pipelines?: PipelineLine[];
   pulseT?: number;
+  tripsT?: number;
+  showPipes?: boolean;
 }
 
 export function buildLayers(
@@ -384,12 +445,13 @@ export function buildLayers(
   onPick: (item: GeoItem) => void,
   opts: BuildOpts = {},
 ): Layer[] {
-  const { sinceMs = 0, dayNight = false, nowMs = 0, cables, pipelines, pulseT = 0 } = opts;
+  const { sinceMs = 0, dayNight = false, nowMs = 0, cables, pipelines, pulseT = 0, tripsT = 0, showPipes = false } = opts;
   const base: Array<Layer | null> = [
     dayNight ? dayNightLayer(nowMs) : null,
     cables && cables.length ? cablesLayer(cables) : null,
     pipelines && pipelines.length ? pipelinesLayer(pipelines) : null,
     bypassArcLayer(visible),
+    tripsLayer(visible, pipelines, showPipes, tripsT),
     pulseLayer(data, visible, sinceMs, pulseT),
     stormRingLayer(data, visible, onPick, sinceMs),
     weatherPolygonLayer(data, visible, onPick, sinceMs),

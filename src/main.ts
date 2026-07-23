@@ -130,7 +130,7 @@ function computeDefcon(signal: GeoItem[]): { level: number; percent: number } {
   return { level, percent: Math.max(0, Math.min(100, Math.round(score))) };
 }
 
-let pulseT = 0;
+let animT = 0;
 function drawMap() {
   overlay.setProps({
     layers: buildLayers(data, visible, focusItem, {
@@ -139,22 +139,28 @@ function drawMap() {
       nowMs: Date.now(),
       cables: showCables ? cablePaths : undefined,
       pipelines: showPipes ? pipeLines : undefined,
-      pulseT,
+      pulseT: animT,
+      tripsT: animT,
+      showPipes,
     }),
   });
 }
 
-// Animate the pulse halo only while high-severity events are present (cheap idle).
+// Animate pulse halos + route flow-dots, but only when there's motion to show and
+// the tab is visible (self-pausing, cheap idle). ~12 fps is plenty for these.
 function hasPulse(): boolean {
   return SIGNAL_LAYERS.concat(HAZARD_LAYERS).some(
     (id) => visible[id] && withinWindow(data[id], sinceMs).some((d) => d.severity >= 6),
   );
 }
+function hasMotion(): boolean {
+  return document.visibilityState === 'visible' && (visible.chokepoints || showPipes || hasPulse());
+}
 setInterval(() => {
-  if (!hasPulse()) return;
-  pulseT = performance.now();
+  if (!hasMotion()) return;
+  animT = performance.now();
   drawMap();
-}, 140);
+}, 80);
 
 function draw() {
   drawMap();

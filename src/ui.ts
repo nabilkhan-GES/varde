@@ -62,6 +62,32 @@ function areaSVG(vals: number[], color: string, w = 268, h = 46): string {
   </svg>`;
 }
 
+// Zero-API "alive" tile: extrapolate global annual energy rates to a per-second,
+// day-resetting running total (absolute-time based → no tab-throttle drift).
+function startCounters(el: HTMLElement): void {
+  const M = [
+    { label: 'Oil burned', unit: 'bbl', annual: 36_500_000_000, color: '#ff9838' },
+    { label: 'CO₂ emitted', unit: 't', annual: 37_400_000_000, color: '#ff5b5b' },
+    { label: 'Electricity gen.', unit: 'MWh', annual: 30_000_000_000, color: '#38bdf8' },
+    { label: 'Renewables added', unit: 'MW', annual: 510_000, color: '#2fe37e' },
+  ];
+  el.innerHTML =
+    M.map(
+      (m, i) =>
+        `<div class="ctr"><span class="ctr-l"><span class="ctr-dot" style="background:${m.color}"></span>${m.label}</span><span class="ctr-v" data-ci="${i}">0</span><span class="ctr-u">${m.unit}</span></div>`,
+    ).join('') + `<div class="note">Extrapolated from global annual rates · resets 00:00 UTC</div>`;
+  const cells = Array.from(el.querySelectorAll<HTMLElement>('[data-ci]'));
+  const tick = () => {
+    const d = new Date();
+    const sec = d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds() + d.getUTCMilliseconds() / 1000;
+    M.forEach((m, i) => {
+      cells[i].textContent = Math.floor((m.annual / 365 / 86400) * sec).toLocaleString();
+    });
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+
 const LAYER_INFO: Record<LayerId, string> = {
   incidents: 'Oil & gas incidents from global news, geolocated.',
   conflict: 'Conflict / geopolitics affecting energy & infrastructure.',
@@ -246,6 +272,7 @@ const TABLE_HEAD = `<div class="thead"><span></span><span>Event</span><span>Type
 export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) {
   el.innerHTML = `
     <div class="card wide" data-card="markets"><div class="card-h"><span class="t">Markets · Live Tape</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="counters"><div class="card-h"><span class="t">World Energy · Today</span><span class="n live" data-n>● LIVE</span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="energy"><div class="card-h"><span class="t">Energy Complex</span><span class="q" title="Live prices are real; inventories require a free EIA_API_KEY">ⓘ</span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="inventories"><div class="card-h"><span class="t">Oil Inventories</span><span class="q" title="EIA weekly stocks — commercial crude, SPR, total oil & Lower-48 nat-gas working storage">ⓘ</span><span class="n" data-n></span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="gasstorage"><div class="card-h"><span class="t">EU Gas Storage</span><span class="q" title="GIE AGSI+ — EU aggregate storage fill % (needs a free GIE_API_KEY)">ⓘ</span><span class="n" data-n></span></div><div class="card-b pad" data-b></div></div>
@@ -279,6 +306,18 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
       : `<div class="empty">No items in range.</div>`;
     bindRows(b, items);
   };
+
+  // Live counters tile.
+  startCounters(body('counters'));
+  // count-bump: flash a panel's count badge whenever its value changes.
+  el.querySelectorAll<HTMLElement>('.card-h [data-n]').forEach((n) => {
+    if (n.classList.contains('live')) return;
+    new MutationObserver(() => {
+      n.classList.remove('bump');
+      void n.offsetWidth;
+      n.classList.add('bump');
+    }).observe(n, { childList: true, characterData: true, subtree: true });
+  });
 
   return {
     setSignal: (items: GeoItem[]) => drill('signal', items),
