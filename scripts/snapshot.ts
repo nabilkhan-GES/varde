@@ -19,6 +19,7 @@ import { handler as gasstorage } from '../src/server/routes/gasstorage';
 import { handler as energynews } from '../src/server/routes/energynews';
 import { handler as hubweather } from '../src/server/routes/hubweather';
 import { handler as cables } from '../src/server/routes/cables';
+import { handler as tankers } from '../src/server/routes/tankers';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -39,6 +40,7 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['energynews', energynews, { items: [] }],
   ['hubweather', hubweather, { hubs: [] }],
   ['cables', cables, { cables: [] }],
+  ['tankers', tankers, { available: false, tankers: [] }],
 ];
 
 let failures = 0;

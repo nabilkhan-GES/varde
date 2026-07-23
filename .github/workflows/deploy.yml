@@ -35,9 +35,11 @@ jobs:
           #   EIA_API_KEY     → Energy Complex + Oil Inventories (eia.gov/opendata)
           #   NASA_FIRMS_API_KEY → Wildfire hotspots (firms.modaps.eosdis.nasa.gov/api)
           #   GIE_API_KEY     → EU Gas Storage (agsi.gie.eu/account)
+          #   AISSTREAM_API_KEY → Tankers (AIS) — timed WS sample (aisstream.io)
           EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
           NASA_FIRMS_API_KEY: ${{ secrets.NASA_FIRMS_API_KEY }}
           GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
+          AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
       - name: Build (GitHub Pages base path)
         run: npm run build
         env:

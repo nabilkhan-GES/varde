@@ -16,6 +16,7 @@ import type {
   FlightResult,
   GasStorageResult,
   HubWeatherResult,
+  TankerResult,
   GeoItem,
   HazardResult,
   InventoriesResult,
@@ -30,16 +31,16 @@ import type {
 
 const REFRESH_MS = 60_000;
 const LAYER_IDS: LayerId[] = [
-  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi', 'chokepoints', 'fires',
+  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi', 'chokepoints', 'fires', 'tankers',
 ];
 const SIGNAL_LAYERS: LayerId[] = ['incidents', 'conflict', 'cyber'];
 const HAZARD_LAYERS: LayerId[] = ['quakes', 'events', 'disasters', 'storms', 'weather', 'fires'];
 
 const data: LayerData = {
-  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [], chokepoints: [], fires: [],
+  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [], chokepoints: [], fires: [], tankers: [],
 };
 const visible: Record<LayerId, boolean> = {
-  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true, chokepoints: true, fires: true,
+  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true, chokepoints: true, fires: true, tankers: true,
 };
 let sinceMs = 0; // time window; 0 = All
 let quotes: Quote[] = [];
@@ -208,7 +209,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -223,6 +224,7 @@ async function refresh() {
       getJson<GasStorageResult>(feedUrl('gasstorage')),
       getJson<EnergyNewsResult>(feedUrl('energynews')),
       getJson<HubWeatherResult>(feedUrl('hubweather')),
+      getJson<TankerResult>(feedUrl('tankers')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -237,6 +239,7 @@ async function refresh() {
     cards.setGasStorage(gs);
     cards.setEnergyNews(enews);
     cards.setHubWeather(hw);
+    if (tk) data.tankers = tk.tankers;
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);

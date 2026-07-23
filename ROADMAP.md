@@ -37,6 +37,21 @@
 - **Day/night terminator:** SHIPPED. Client-computed subsolar terminator as a deck
   `PolygonLayer` (keyless) — map-bar "Day/Night" toggle.
 - **Popup legibility fix:** maplibre CSS now loads before ours, so the dark popup wins.
+- **Maritime chokepoints + bypass arcs:** SHIPPED (keyless IMF PortWatch ArcGIS) — layer,
+  panel, and curated bypass ArcLayer.
+- **Pizza Index DEFCON chip:** SHIPPED (keyless pizzint.watch) alongside the signal DEFCON.
+- **Energy Headlines / Hub Weather / Submarine Cables:** SHIPPED (keyless: publisher RSS,
+  Open-Meteo, TeleGeography). Cables on a map-bar toggle.
+- **NASA FIRMS wildfire hotspots:** SHIPPED, key-gated (`NASA_FIRMS_API_KEY`).
+- **GIE AGSI+ EU gas storage:** SHIPPED, key-gated (`GIE_API_KEY`) — area-chart panel.
+- **AIS tankers:** SHIPPED, key-gated (`AISSTREAM_API_KEY`). No always-on relay — the
+  snapshot takes a timed WebSocket sample over chokepoint bounding boxes (`src/server/ais.ts`),
+  classifies tankers (ship type 80–89), colors anchored vs underway.
+- **ENTSO-E EU power:** PENDING (token requested; needs XML parsing).
+
+## Keys (all free; set as GitHub Actions secrets + local .env)
+`EIA_API_KEY` ✓ · `GIE_API_KEY` ✓ · `NASA_FIRMS_API_KEY` ✓ · `AISSTREAM_API_KEY` (aisstream.io) ·
+`ENTSO_E_TOKEN` (transparency.entsoe.eu). Every keyed feed degrades to empty without its key.
 - **GDELT DOC 2.0 (sourcecountry geo):** BUILT but OFF by default (`src/server/gdelt.ts`,
   gate `VARDE_GDELT=1`). Evaluated for the incidents layer; its full-text matching is too
   loose (energy terms collide with data/sales "pipelines" etc.) and it rate-limits to

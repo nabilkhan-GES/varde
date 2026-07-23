@@ -17,10 +17,12 @@
     "@deck.gl/core": "^9.0.36",
     "@deck.gl/layers": "^9.0.36",
     "@deck.gl/mapbox": "^9.0.36",
-    "maplibre-gl": "^4.7.1"
+    "maplibre-gl": "^4.7.1",
+    "ws": "^8.21.1"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.9",

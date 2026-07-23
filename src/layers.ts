@@ -47,6 +47,7 @@ export const LAYER_STYLES: LayerStyle[] = [
   { id: 'flights', label: 'Live aircraft', color: [148, 163, 184], hex: '#94a3b8' },
   { id: 'classvi', label: 'Class VI (CCUS)', color: [52, 211, 153], hex: '#34d399' },
   { id: 'chokepoints', label: 'Maritime chokepoints', color: [96, 165, 250], hex: '#60a5fa' },
+  { id: 'tankers', label: 'Tankers (AIS)', color: [0, 209, 255], hex: '#00d1ff' },
   { id: 'events', label: 'Natural hazards', color: [167, 139, 250], hex: '#a78bfa' },
   { id: 'disasters', label: 'Global disasters', color: [234, 179, 8], hex: '#eab308' },
   { id: 'storms', label: 'Tropical cyclones', color: [45, 212, 191], hex: '#2dd4bf' },
@@ -183,6 +184,39 @@ function bypassArcLayer(visible: Record<LayerId, boolean>): Layer | null {
   });
 }
 
+// Live tankers/vessels at chokepoints — amber = anchored/loading, cyan = underway;
+// unclassified vessels in the same waters render faint grey.
+function tankersLayer(
+  data: LayerData,
+  visible: Record<LayerId, boolean>,
+  onPick: (item: GeoItem) => void,
+  sinceMs: number,
+): Layer | null {
+  const tankers = withinWindow(data.tankers ?? [], sinceMs);
+  if (!visible.tankers || tankers.length === 0) return null;
+  return new ScatterplotLayer<GeoItem>({
+    id: 'tankers',
+    data: tankers,
+    pickable: true,
+    radiusUnits: 'pixels',
+    radiusMinPixels: 2,
+    radiusMaxPixels: 7,
+    stroked: true,
+    lineWidthUnits: 'pixels',
+    getLineWidth: 0.8,
+    getLineColor: [10, 14, 20, 180],
+    getPosition: (d) => [d.lon, d.lat],
+    getRadius: (d) => (d.meta?.tanker ? 5 : 3),
+    getFillColor: (d) => {
+      if (!d.meta?.tanker) return [148, 163, 184, 150];
+      return d.meta?.anchored ? [255, 183, 3, 235] : [0, 209, 255, 235];
+    },
+    onClick: (info) => {
+      if (info.object) onPick(info.object as GeoItem);
+    },
+  });
+}
+
 // Live aircraft as rotated, altitude-colored plane icons (deck IconLayer),
 // clamped in pixels so they stay crisp at every zoom.
 function flightsIconLayer(
@@ -300,7 +334,7 @@ export function buildLayers(
   ];
   // Flights are icons, not dots; the rest are pixel-clamped scatter markers so
   // they stay small and crisp (no ballooning "big circles") at any zoom.
-  const points = LAYER_STYLES.filter((s) => s.id !== 'flights').map(
+  const points = LAYER_STYLES.filter((s) => s.id !== 'flights' && s.id !== 'tankers').map(
     (s) =>
       new ScatterplotLayer<GeoItem>({
         id: s.id,
@@ -323,7 +357,8 @@ export function buildLayers(
         },
       }),
   );
+  const tankers = tankersLayer(data, visible, onPick, sinceMs);
   const flights = flightsIconLayer(data, visible, onPick, sinceMs);
-  // Bottom → top: terminator, area polygons, scatter markers, aircraft icons.
-  return [...base, ...points, flights].filter((l): l is Layer => l != null);
+  // Bottom → top: terminator, area polygons, scatter markers, tankers, aircraft.
+  return [...base, ...points, tankers, flights].filter((l): l is Layer => l != null);
 }

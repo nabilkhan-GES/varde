@@ -10,7 +10,8 @@ export type LayerId =
   | 'disasters'
   | 'storms'
   | 'chokepoints'
-  | 'fires';
+  | 'fires'
+  | 'tankers';
 
 /** A single mappable item, normalized across every source. */
 export interface GeoItem {
@@ -68,6 +69,10 @@ export interface ChokepointResult {
 export interface FireResult {
   available: boolean;
   fires: GeoItem[];
+}
+export interface TankerResult {
+  available: boolean;
+  tankers: GeoItem[];
 }
 export interface PizzintResult {
   defcon: number; // 1 (max) … 5 (normal)
