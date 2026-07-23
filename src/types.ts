@@ -8,7 +8,9 @@ export type LayerId =
   | 'flights'
   | 'classvi'
   | 'disasters'
-  | 'storms';
+  | 'storms'
+  | 'chokepoints'
+  | 'fires';
 
 /** A single mappable item, normalized across every source. */
 export interface GeoItem {
@@ -59,6 +61,19 @@ export interface HazardResult {
 }
 export interface FlightResult {
   flights: GeoItem[];
+}
+export interface ChokepointResult {
+  chokepoints: GeoItem[];
+}
+export interface FireResult {
+  available: boolean;
+  fires: GeoItem[];
+}
+export interface PizzintResult {
+  defcon: number; // 1 (max) … 5 (normal)
+  index: number; // aggregate activity %
+  spikes: number;
+  label: string;
 }
 export interface MarketResult {
   quotes: Quote[];

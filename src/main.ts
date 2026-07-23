@@ -6,6 +6,7 @@ import { createMap } from './map';
 import { buildLayers, withinWindow } from './layers';
 import { renderCards, renderCommandBar, renderLayerPanel, renderMapBar } from './ui';
 import type {
+  ChokepointResult,
   ClassViResult,
   EnergyResult,
   FlightResult,
@@ -16,22 +17,23 @@ import type {
   LayerId,
   MarketResult,
   NewsResult,
+  PizzintResult,
   Quote,
   TrackersResult,
 } from './types';
 
 const REFRESH_MS = 60_000;
 const LAYER_IDS: LayerId[] = [
-  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi',
+  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi', 'chokepoints', 'fires',
 ];
 const SIGNAL_LAYERS: LayerId[] = ['incidents', 'conflict', 'cyber'];
-const HAZARD_LAYERS: LayerId[] = ['quakes', 'events', 'disasters', 'storms', 'weather'];
+const HAZARD_LAYERS: LayerId[] = ['quakes', 'events', 'disasters', 'storms', 'weather', 'fires'];
 
 const data: LayerData = {
-  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [],
+  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [], chokepoints: [], fires: [],
 };
 const visible: Record<LayerId, boolean> = {
-  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true,
+  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true, chokepoints: true, fires: true,
 };
 let sinceMs = 0; // time window; 0 = All
 let quotes: Quote[] = [];
@@ -95,6 +97,7 @@ function draw() {
   cards.setSignal(signal);
   cards.setHazards(collect(HAZARD_LAYERS));
   cards.setClassVI(visible.classvi ? data.classvi : []);
+  cards.setChokepoints(visible.chokepoints ? data.chokepoints : []);
   layerPanel.setCounts(counts());
   cmd.setStatus(signal.length, signal[0]?.severity ?? 0);
   const dc = computeDefcon(signal);
@@ -181,7 +184,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -190,6 +193,8 @@ async function refresh() {
       getJson<EnergyResult>(feedUrl('energy')),
       getJson<InventoriesResult>(feedUrl('inventories')),
       getJson<TrackersResult>(feedUrl('trackers')),
+      getJson<ChokepointResult>(feedUrl('chokepoints')),
+      getJson<PizzintResult>(feedUrl('pizzint')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -198,6 +203,8 @@ async function refresh() {
     }
     if (fly) data.flights = fly.flights;
     if (cv) data.classvi = cv.wells;
+    if (cp) data.chokepoints = cp.chokepoints;
+    if (pz) cmd.setPizza(pz.defcon, pz.index);
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);

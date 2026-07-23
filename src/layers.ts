@@ -1,4 +1,4 @@
-import { GeoJsonLayer, IconLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { ArcLayer, GeoJsonLayer, IconLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import { severityRadius } from './severity';
 import type { GeoItem, LayerData, LayerId } from './types';
@@ -46,14 +46,25 @@ export interface LayerStyle {
 export const LAYER_STYLES: LayerStyle[] = [
   { id: 'flights', label: 'Live aircraft', color: [148, 163, 184], hex: '#94a3b8' },
   { id: 'classvi', label: 'Class VI (CCUS)', color: [52, 211, 153], hex: '#34d399' },
+  { id: 'chokepoints', label: 'Maritime chokepoints', color: [96, 165, 250], hex: '#60a5fa' },
   { id: 'events', label: 'Natural hazards', color: [167, 139, 250], hex: '#a78bfa' },
   { id: 'disasters', label: 'Global disasters', color: [234, 179, 8], hex: '#eab308' },
   { id: 'storms', label: 'Tropical cyclones', color: [45, 212, 191], hex: '#2dd4bf' },
   { id: 'weather', label: 'Weather alerts', color: [34, 211, 238], hex: '#22d3ee' },
+  { id: 'fires', label: 'Wildfire hotspots', color: [251, 146, 60], hex: '#fb923c' },
   { id: 'quakes', label: 'Seismicity', color: [56, 189, 248], hex: '#38bdf8' },
   { id: 'cyber', label: 'Cyber', color: [232, 121, 249], hex: '#e879f9' },
   { id: 'conflict', label: 'Conflict', color: [239, 68, 68], hex: '#ef4444' },
   { id: 'incidents', label: 'Energy incidents', color: [249, 115, 22], hex: '#f97316' },
+];
+
+// Curated bypass routes drawn when a chokepoint is disrupted — the real-world
+// alternatives shippers take. Great-circle arcs (source → target).
+export const BYPASS_ROUTES: Array<{ label: string; from: [number, number]; to: [number, number] }> = [
+  { label: 'Suez → Cape of Good Hope', from: [32.35, 30.6], to: [20.0, -34.8] },
+  { label: 'Bab-el-Mandeb → Cape of Good Hope', from: [43.3, 12.6], to: [20.0, -34.8] },
+  { label: 'Panama → Strait of Magellan', from: [-79.5, 9.0], to: [-70.5, -53.5] },
+  { label: 'Bosphorus → (no bypass)', from: [29.0, 41.1], to: [29.0, 41.1] },
 ];
 
 /** Keep items with no timestamp (reference data) or within the time window. */
@@ -152,6 +163,26 @@ function stormRingLayer(
   });
 }
 
+// Curated maritime bypass arcs — alternatives around key chokepoints. Shown with
+// the chokepoints layer so the "what if this strait closes" routes are visible.
+const CHOKE_HEX = hexOf('chokepoints');
+function bypassArcLayer(visible: Record<LayerId, boolean>): Layer | null {
+  if (!visible.chokepoints) return null;
+  const routes = BYPASS_ROUTES.filter((r) => r.from[0] !== r.to[0] || r.from[1] !== r.to[1]);
+  return new ArcLayer<{ from: [number, number]; to: [number, number]; label: string }>({
+    id: 'bypass-arcs',
+    data: routes,
+    greatCircle: true,
+    getSourcePosition: (d) => d.from,
+    getTargetPosition: (d) => d.to,
+    getSourceColor: [...CHOKE_HEX, 90] as [number, number, number, number],
+    getTargetColor: [96, 200, 140, 150],
+    getWidth: 1.6,
+    widthUnits: 'pixels',
+    pickable: false,
+  });
+}
+
 // Live aircraft as rotated, altitude-colored plane icons (deck IconLayer),
 // clamped in pixels so they stay crisp at every zoom.
 function flightsIconLayer(
@@ -247,6 +278,7 @@ export function buildLayers(
   const { sinceMs = 0, dayNight = false, nowMs = 0 } = opts;
   const base: Array<Layer | null> = [
     dayNight ? dayNightLayer(nowMs) : null,
+    bypassArcLayer(visible),
     stormRingLayer(data, visible, onPick, sinceMs),
     weatherPolygonLayer(data, visible, onPick, sinceMs),
   ];

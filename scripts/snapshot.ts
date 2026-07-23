@@ -12,6 +12,8 @@ import { handler as classvi } from '../src/server/routes/classvi';
 import { handler as energy } from '../src/server/routes/energy';
 import { handler as inventories } from '../src/server/routes/inventories';
 import { handler as trackers } from '../src/server/routes/trackers';
+import { handler as chokepoints } from '../src/server/routes/chokepoints';
+import { handler as pizzint } from '../src/server/routes/pizzint';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -25,6 +27,8 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['energy', energy, { available: false, series: [] }],
   ['inventories', inventories, { available: false, series: [] }],
   ['trackers', trackers, { asOf: '', note: '', pipelines: [], storage: [], crisis: [] }],
+  ['chokepoints', chokepoints, { chokepoints: [] }],
+  ['pizzint', pizzint, { defcon: 5, index: 0, spikes: 0, label: 'Normal Activity' }],
 ];
 
 let failures = 0;

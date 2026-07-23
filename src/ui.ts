@@ -64,6 +64,8 @@ const LAYER_INFO: Record<LayerId, string> = {
   weather: 'Active US weather alerts (NWS).',
   flights: 'Live aircraft worldwide (OpenSky) — icons rotated by heading, colored by altitude.',
   classvi: 'Class VI CO₂ sequestration permits (curated snapshot).',
+  chokepoints: 'Maritime energy chokepoints — vessel traffic & tanker share (IMF PortWatch).',
+  fires: 'Wildfire hotspots by fire radiative power (NASA FIRMS — needs a free key).',
 };
 
 // ── Command bar ────────────────────────────────────────
@@ -72,6 +74,7 @@ export function renderCommandBar(el: HTMLElement, onRefresh: () => void) {
   el.innerHTML = `
     <div class="cb-brand"><img class="cb-logo" src="${base}gunnar-logo.png" alt="Gunnar Energy Services" /><span class="v">energy monitor</span></div>
     <span class="cb-badge cb-defcon" data-defcon title="Composite threat level from live signal & hazards">DEFCON <b data-lvl>—</b> <span data-pct></span></span>
+    <span class="cb-badge cb-pizza" data-pizza title="Pentagon Pizza Index — pizzeria busyness near the Pentagon, mapped to DEFCON (pizzint.watch)">🍕 <b data-pzlvl>—</b> <span data-pzpct></span></span>
     <span class="cb-badge cb-status" data-status>Signal —</span>
     <div class="cb-spacer"></div>
     <span class="cb-live" data-live><span class="dot"></span><span data-updated>connecting…</span></span>
@@ -83,6 +86,9 @@ export function renderCommandBar(el: HTMLElement, onRefresh: () => void) {
   const defcon = el.querySelector('[data-defcon]') as HTMLElement;
   const lvl = el.querySelector('[data-lvl]') as HTMLElement;
   const pct = el.querySelector('[data-pct]') as HTMLElement;
+  const pizza = el.querySelector('[data-pizza]') as HTMLElement;
+  const pzLvl = el.querySelector('[data-pzlvl]') as HTMLElement;
+  const pzPct = el.querySelector('[data-pzpct]') as HTMLElement;
   return {
     setLive(ts: number) {
       updated.textContent = `updated ${new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
@@ -93,6 +99,11 @@ export function renderCommandBar(el: HTMLElement, onRefresh: () => void) {
       lvl.textContent = String(level);
       pct.textContent = `${percent}%`;
       defcon.dataset.lvl = String(level);
+    },
+    setPizza(level: number, percent: number) {
+      pzLvl.textContent = String(level);
+      pzPct.textContent = `${percent}%`;
+      pizza.dataset.lvl = String(level);
     },
     setStatus(count: number, peak: number) {
       status.textContent = `Signal ${count} · peak ${peak ? peak.toFixed(1) : '—'}`;
@@ -223,6 +234,7 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="signal"><div class="card-h"><span class="t">Signal · Incidents / Conflict / Cyber</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="hazards"><div class="card-h"><span class="t">Hazards & Disasters</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="classvi"><div class="card-h"><span class="t">Class VI · CCUS Tracker</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="chokepoints"><div class="card-h"><span class="t">Maritime Chokepoints</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="pipelines"><div class="card-h"><span class="t">Oil &amp; Gas Pipeline Status</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="storage"><div class="card-h"><span class="t">Strategic Storage Atlas</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
@@ -248,6 +260,25 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
   return {
     setSignal: (items: GeoItem[]) => drill('signal', items),
     setHazards: (items: GeoItem[]) => drill('hazards', items),
+    setChokepoints(items?: GeoItem[] | null) {
+      const list = items ?? [];
+      num('chokepoints').textContent = list.length ? String(list.length) : '';
+      const b = body('chokepoints');
+      b.innerHTML = list.length
+        ? `<div class="trk"><div class="trk-h"><span>Strait / Canal</span><span>Top cargo</span><span>Tanker</span><span>Vessels</span></div>` +
+          list
+            .map(
+              (c, i) => `<div class="trk-r" data-i="${i}" title="${esc(String(c.place ?? ''))}">
+                <span class="trk-nm">${esc(c.title)}</span>
+                <span class="trk-sub">${esc(String(c.place ?? '—'))}</span>
+                <span class="trk-cap">${Number(c.meta?.tankerPct ?? 0)}%</span>
+                <span class="trk-cap">${Number(c.meta?.total ?? 0).toLocaleString()}</span></div>`,
+            )
+            .join('') +
+          `</div>`
+        : `<div class="empty">—</div>`;
+      bindRows(b, list);
+    },
     setClassVI(wells: GeoItem[]) {
       num('classvi').textContent = String(wells.length);
       const b = body('classvi');
