@@ -10,8 +10,8 @@ const KEY = process.env.GIE_API_KEY || process.env.AGSI_API_KEY;
 export async function handler(): Promise<GasStorageResult> {
   if (!KEY) return { available: false, full: null, trend: null, storageTWh: null, points: [] };
   return cached('gasstorage', 6 * 60 * 60 * 1000, async () => {
-    // AGSI+ v2: EU aggregate, newest-first; auth via the x-key header.
-    const j = await fetchJson<{ data?: any[] }>('https://agsi.gie.eu/api?country=eu&size=90', 15000, {
+    // AGSI+ v2: EU aggregate (continent=eu), newest-first; auth via x-key header.
+    const j = await fetchJson<{ data?: any[] }>('https://agsi.gie.eu/api?continent=eu&size=90', 15000, {
       'x-key': KEY as string,
     });
     const rows = j.data ?? [];
