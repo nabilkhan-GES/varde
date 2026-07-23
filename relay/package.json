@@ -1,0 +1,16 @@
+{
+  "name": "varde-ais-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Always-on AISStream relay for Varde — serves classified tankers at /tankers.json",
+  "scripts": {
+    "start": "node ais-relay.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.21.1"
+  }
+}

@@ -1,7 +1,16 @@
 import { ArcLayer, GeoJsonLayer, IconLayer, PathLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import { severityRadius } from './severity';
-import type { CableLine, GeoItem, LayerData, LayerId } from './types';
+import type { CableLine, GeoItem, LayerData, LayerId, PipelineLine } from './types';
+
+// Pipeline status → color (matches the tracker panel semantics).
+const PIPE_COLOR: Record<string, [number, number, number]> = {
+  operating: [46, 204, 113],
+  reduced: [243, 156, 18],
+  idle: [200, 160, 60],
+  offline: [231, 76, 60],
+  closed: [231, 76, 60],
+};
 
 // A crisp airplane silhouette (points north), white so deck.gl's getColor can
 // tint it via mask:true — one icon recolored per aircraft by altitude.
@@ -297,6 +306,22 @@ function nightPolygon(nowMs: number): number[][] {
   return [...top, ...bottom];
 }
 
+// Schematic pipeline routes, colored by status (toggled from the map bar).
+function pipelinesLayer(lines: PipelineLine[]): Layer {
+  return new PathLayer<PipelineLine>({
+    id: 'pipelines',
+    data: lines,
+    getPath: (d) => d.path as unknown as [number, number][],
+    getColor: (d) => [...(PIPE_COLOR[d.status] ?? [148, 163, 184]), 210] as [number, number, number, number],
+    getWidth: 2,
+    widthUnits: 'pixels',
+    widthMinPixels: 1.5,
+    capRounded: true,
+    jointRounded: true,
+    pickable: false,
+  });
+}
+
 // Submarine cables as thin reference lines (toggled from the map bar).
 function cablesLayer(cables: CableLine[]): Layer {
   return new PathLayer<CableLine>({
@@ -316,6 +341,7 @@ export interface BuildOpts {
   dayNight?: boolean;
   nowMs?: number;
   cables?: CableLine[];
+  pipelines?: PipelineLine[];
 }
 
 export function buildLayers(
@@ -324,10 +350,11 @@ export function buildLayers(
   onPick: (item: GeoItem) => void,
   opts: BuildOpts = {},
 ): Layer[] {
-  const { sinceMs = 0, dayNight = false, nowMs = 0, cables } = opts;
+  const { sinceMs = 0, dayNight = false, nowMs = 0, cables, pipelines } = opts;
   const base: Array<Layer | null> = [
     dayNight ? dayNightLayer(nowMs) : null,
     cables && cables.length ? cablesLayer(cables) : null,
+    pipelines && pipelines.length ? pipelinesLayer(pipelines) : null,
     bypassArcLayer(visible),
     stormRingLayer(data, visible, onPick, sinceMs),
     weatherPolygonLayer(data, visible, onPick, sinceMs),

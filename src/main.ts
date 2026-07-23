@@ -9,6 +9,8 @@ import type {
   CableLine,
   CablesResult,
   ChokepointResult,
+  PipelineLine,
+  PipelinesResult,
   ClassViResult,
   EnergyNewsResult,
   EnergyResult,
@@ -51,6 +53,8 @@ let popup: maplibregl.Popup | null = null;
 let dayNight = false;
 let showCables = false;
 let cablePaths: CableLine[] = [];
+let showPipes = false;
+let pipeLines: PipelineLine[] = [];
 
 const cmd = renderCommandBar(document.getElementById('cmdbar')!, () => void refresh());
 renderMapBar(document.getElementById('mapbar')!, {
@@ -58,6 +62,7 @@ renderMapBar(document.getElementById('mapbar')!, {
   onRadar: (on) => void setRadar(on),
   onDayNight: (on) => { dayNight = on; draw(); },
   onCables: (on) => void setCables(on),
+  onPipelines: (on) => void setPipes(on),
 });
 
 // Submarine cables are static + heavy, so fetch once on first enable, then cache.
@@ -66,6 +71,15 @@ async function setCables(on: boolean) {
   if (on && cablePaths.length === 0) {
     const res = await getJson<CablesResult>(feedUrl('cables'));
     if (res) cablePaths = res.cables;
+  }
+  draw();
+}
+
+async function setPipes(on: boolean) {
+  showPipes = on;
+  if (on && pipeLines.length === 0) {
+    const res = await getJson<PipelinesResult>(feedUrl('pipelines'));
+    if (res) pipeLines = res.lines;
   }
   draw();
 }
@@ -116,6 +130,7 @@ function draw() {
       dayNight,
       nowMs: Date.now(),
       cables: showCables ? cablePaths : undefined,
+      pipelines: showPipes ? pipeLines : undefined,
     }),
   });
   const signal = collect(SIGNAL_LAYERS);
@@ -203,6 +218,11 @@ async function getJson<T>(url: string): Promise<T | null> {
 const feedUrl = (name: string): string =>
   import.meta.env.DEV ? `/api/${name}` : `${import.meta.env.BASE_URL}data/${name}.json`;
 
+// If an always-on AIS relay is configured, read live classified tankers from it
+// (dense, continuously updated) instead of the hourly sample; else fall back.
+const AIS_RELAY = (import.meta.env.VITE_AIS_RELAY_URL as string | undefined)?.replace(/\/$/, '');
+const tankersUrl = (): string => (AIS_RELAY ? `${AIS_RELAY}/tankers.json` : feedUrl('tankers'));
+
 let inFlight = false;
 async function refresh() {
   if (inFlight) return;
@@ -224,7 +244,7 @@ async function refresh() {
       getJson<GasStorageResult>(feedUrl('gasstorage')),
       getJson<EnergyNewsResult>(feedUrl('energynews')),
       getJson<HubWeatherResult>(feedUrl('hubweather')),
-      getJson<TankerResult>(feedUrl('tankers')),
+      getJson<TankerResult>(tankersUrl()),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {

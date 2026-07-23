@@ -118,6 +118,14 @@ export interface CableLine {
 export interface CablesResult {
   cables: CableLine[];
 }
+export interface PipelineLine {
+  name: string;
+  status: string;
+  path: number[][];
+}
+export interface PipelinesResult {
+  lines: PipelineLine[];
+}
 export interface MarketResult {
   quotes: Quote[];
 }

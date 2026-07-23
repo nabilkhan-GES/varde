@@ -129,6 +129,7 @@ export interface MapBarHandlers {
   onRadar: (on: boolean) => void;
   onDayNight: (on: boolean) => void;
   onCables: (on: boolean) => void;
+  onPipelines: (on: boolean) => void;
   defaultRange?: number;
 }
 
@@ -139,6 +140,7 @@ export function renderMapBar(el: HTMLElement, h: MapBarHandlers) {
     <span class="clock" data-clock>—</span>
     <div class="spacer"></div>
     <button class="tgl" data-radar>◊ Radar</button>
+    <button class="tgl" data-pipelines>❰❱ Pipelines</button>
     <button class="tgl" data-cables>⌇ Cables</button>
     <button class="tgl" data-daynight>☾ Day/Night</button>
     <div class="seg" data-range>${RANGES.map(([l, ms]) => `<button data-ms="${ms}" class="${ms === defaultRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
@@ -159,6 +161,7 @@ export function renderMapBar(el: HTMLElement, h: MapBarHandlers) {
     });
   };
   toggle('[data-radar]', h.onRadar);
+  toggle('[data-pipelines]', h.onPipelines);
   toggle('[data-cables]', h.onCables);
   toggle('[data-daynight]', h.onDayNight);
   const tick = () => {
