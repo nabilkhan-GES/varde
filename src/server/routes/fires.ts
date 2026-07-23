@@ -13,9 +13,11 @@ const MAX = 900;
 export async function handler(): Promise<FireResult> {
   if (!KEY) return { available: false, fires: [] };
   return cached('fires', 60 * 60 * 1000, async () => {
-    // area/csv/<key>/<source>/<west,south,east,north>/<days>
+    // area/csv/<key>/<source>/<west,south,east,north>/<days>. FIRMS generates the
+    // global file on a cold request (can take ~30-60s) then serves it cached, so
+    // allow a generous timeout.
     const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${KEY}/${SRC}/-180,-90,180,90/1`;
-    const csv = await fetchText(url, 20000);
+    const csv = await fetchText(url, 90000);
     const fires = parseFires(csv);
     return { available: true, fires };
   });
