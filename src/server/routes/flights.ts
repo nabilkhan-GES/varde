@@ -1,18 +1,18 @@
-// Live aircraft over the Gulf of Mexico / U.S. energy corridor — OpenSky Network
-// anonymous API (keyless, rate-limited). Server-cached 10 min to stay within the
-// free anonymous credit budget; a bounded bbox keeps each call cheap.
+// Live aircraft worldwide — OpenSky Network anonymous API (keyless, rate-limited).
+// Server-cached 10 min to stay within the free anonymous credit budget. The
+// global `states/all` call is heavier than a bbox but gives worldwide coverage;
+// on GitHub Pages the hourly snapshot makes only 24 calls/day, well within budget.
 import { cached, fetchJson } from '../util';
 import type { FlightResult, GeoItem } from '../../types';
 
-// [lamin, lomin, lamax, lomax] — Texas/Louisiana coast + Gulf offshore.
-const BBOX = { lamin: 18, lomin: -98, lamax: 31, lomax: -80 };
+const MAX = 1200;
 
 export async function handler(): Promise<FlightResult> {
   return cached('flights', 10 * 60 * 1000, async () => {
-    const url =
-      `https://opensky-network.org/api/states/all?lamin=${BBOX.lamin}&lomin=${BBOX.lomin}` +
-      `&lamax=${BBOX.lamax}&lomax=${BBOX.lomax}`;
-    const data = await fetchJson<{ states?: any[][] }>(url, 12000).catch(() => ({ states: [] }));
+    const data = await fetchJson<{ states?: any[][] }>(
+      'https://opensky-network.org/api/states/all',
+      15000,
+    ).catch(() => ({ states: [] }));
     const flights: GeoItem[] = [];
     for (const s of data.states ?? []) {
       const lon = s[5];
@@ -32,6 +32,8 @@ export async function handler(): Promise<FlightResult> {
         meta: { altM: s[7], velMs: s[9], trackDeg: s[10] },
       });
     }
-    return { flights: flights.slice(0, 500) };
+    // Prefer higher-altitude en-route traffic when trimming to the cap.
+    flights.sort((a, b) => (Number(b.meta?.altM) || 0) - (Number(a.meta?.altM) || 0));
+    return { flights: flights.slice(0, MAX) };
   });
 }

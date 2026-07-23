@@ -44,7 +44,6 @@ let dayNight = false;
 const cmd = renderCommandBar(document.getElementById('cmdbar')!, () => void refresh());
 renderMapBar(document.getElementById('mapbar')!, {
   onRange: (ms) => { sinceMs = ms; draw(); },
-  onDim: (dim) => map.easeTo({ pitch: dim === '3d' ? 55 : 0, duration: 600 }),
   onRadar: (on) => void setRadar(on),
   onDayNight: (on) => { dayNight = on; draw(); },
 });
@@ -70,6 +69,24 @@ function counts(): Record<LayerId, number> {
   return Object.fromEntries(LAYER_IDS.map((id) => [id, data[id].length])) as Record<LayerId, number>;
 }
 
+// Composite threat level (DEFCON 5 = calm → 1 = severe) from the live signal &
+// hazard set. Heuristic: high-severity conflict/incidents dominate; hazard
+// volume and peak severity add pressure. Percent is the raw threat score,
+// capped — a rough intensity gauge, not a probability.
+function computeDefcon(signal: GeoItem[]): { level: number; percent: number } {
+  const haz = collect(HAZARD_LAYERS);
+  const peak = Math.max(0, ...signal.map((s) => s.severity), ...haz.map((h) => h.severity));
+  const severe = signal.filter((s) => s.severity >= 4).length;
+  const conflictHi = (data.conflict ?? []).filter((c) => c.severity >= 6).length;
+  const score = severe * 3 + conflictHi * 5 + peak * 4 + Math.min(haz.length, 20) * 0.3;
+  let level = 5;
+  if (score >= 90) level = 1;
+  else if (score >= 60) level = 2;
+  else if (score >= 35) level = 3;
+  else if (score >= 15) level = 4;
+  return { level, percent: Math.max(0, Math.min(100, Math.round(score))) };
+}
+
 function draw() {
   overlay.setProps({
     layers: buildLayers(data, visible, focusItem, { sinceMs, dayNight, nowMs: Date.now() }),
@@ -80,6 +97,8 @@ function draw() {
   cards.setClassVI(visible.classvi ? data.classvi : []);
   layerPanel.setCounts(counts());
   cmd.setStatus(signal.length, signal[0]?.severity ?? 0);
+  const dc = computeDefcon(signal);
+  cmd.setDefcon(dc.level, dc.percent);
 }
 
 function focusItem(it: GeoItem) {

@@ -62,15 +62,16 @@ const LAYER_INFO: Record<LayerId, string> = {
   disasters: 'Global disaster alerts with alert levels (GDACS).',
   storms: 'Active tropical cyclones (NOAA NHC).',
   weather: 'Active US weather alerts (NWS).',
-  flights: 'Live aircraft over the Gulf / US energy corridor (OpenSky).',
+  flights: 'Live aircraft worldwide (OpenSky) — icons rotated by heading, colored by altitude.',
   classvi: 'Class VI CO₂ sequestration permits (curated snapshot).',
 };
 
 // ── Command bar ────────────────────────────────────────
 export function renderCommandBar(el: HTMLElement, onRefresh: () => void) {
+  const base = import.meta.env.BASE_URL;
   el.innerHTML = `
-    <div class="cb-brand"><b>VARDE</b><span class="v">v0.2 · energy monitor</span></div>
-    <span class="cb-badge energy"><span class="dot"></span>Energy</span>
+    <div class="cb-brand"><img class="cb-logo" src="${base}gunnar-logo.png" alt="Gunnar Energy Services" /><span class="v">energy monitor</span></div>
+    <span class="cb-badge cb-defcon" data-defcon title="Composite threat level from live signal & hazards">DEFCON <b data-lvl>—</b> <span data-pct></span></span>
     <span class="cb-badge cb-status" data-status>Signal —</span>
     <div class="cb-spacer"></div>
     <span class="cb-live" data-live><span class="dot"></span><span data-updated>connecting…</span></span>
@@ -79,12 +80,20 @@ export function renderCommandBar(el: HTMLElement, onRefresh: () => void) {
   const live = el.querySelector('[data-live]') as HTMLElement;
   const updated = el.querySelector('[data-updated]') as HTMLElement;
   const status = el.querySelector('[data-status]') as HTMLElement;
+  const defcon = el.querySelector('[data-defcon]') as HTMLElement;
+  const lvl = el.querySelector('[data-lvl]') as HTMLElement;
+  const pct = el.querySelector('[data-pct]') as HTMLElement;
   return {
     setLive(ts: number) {
       updated.textContent = `updated ${new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
       live.classList.remove('stale');
     },
     setStale() { live.classList.add('stale'); updated.textContent = 'refreshing…'; },
+    setDefcon(level: number, percent: number) {
+      lvl.textContent = String(level);
+      pct.textContent = `${percent}%`;
+      defcon.dataset.lvl = String(level);
+    },
     setStatus(count: number, peak: number) {
       status.textContent = `Signal ${count} · peak ${peak ? peak.toFixed(1) : '—'}`;
       status.classList.toggle('hi', peak >= 6);
@@ -100,7 +109,6 @@ const RANGES: Array<[string, number]> = [
 
 export interface MapBarHandlers {
   onRange: (ms: number) => void;
-  onDim: (d: '2d' | '3d') => void;
   onRadar: (on: boolean) => void;
   onDayNight: (on: boolean) => void;
   defaultRange?: number;
@@ -114,21 +122,13 @@ export function renderMapBar(el: HTMLElement, h: MapBarHandlers) {
     <div class="spacer"></div>
     <button class="tgl" data-radar>◊ Radar</button>
     <button class="tgl" data-daynight>☾ Day/Night</button>
-    <div class="seg" data-range>${RANGES.map(([l, ms]) => `<button data-ms="${ms}" class="${ms === defaultRange ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <div class="seg" data-dim><button data-d="2d" class="on">2D</button><button data-d="3d">3D</button></div>`;
+    <div class="seg" data-range>${RANGES.map(([l, ms]) => `<button data-ms="${ms}" class="${ms === defaultRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const clock = el.querySelector('[data-clock]') as HTMLElement;
   el.querySelectorAll<HTMLElement>('[data-range] button').forEach((b) =>
     b.addEventListener('click', () => {
       el.querySelectorAll('[data-range] button').forEach((x) => x.classList.remove('on'));
       b.classList.add('on');
       h.onRange(Number(b.dataset.ms));
-    }),
-  );
-  el.querySelectorAll<HTMLElement>('[data-dim] button').forEach((b) =>
-    b.addEventListener('click', () => {
-      el.querySelectorAll('[data-dim] button').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on');
-      h.onDim(b.dataset.d as '2d' | '3d');
     }),
   );
   const toggle = (sel: string, cb: (on: boolean) => void) => {
