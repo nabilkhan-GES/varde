@@ -145,6 +145,16 @@ export interface MacroResult {
   asOf?: string;
   series: MacroSeries[];
 }
+export interface FuelPricesResult {
+  available: boolean;
+  asOf?: string;
+  series: MacroSeries[]; // gasoline, diesel ($/gal) with sparkline points
+}
+export interface RenewablesResult {
+  asOf?: string;
+  world: number | null; // % renewable electricity output
+  countries: Array<{ name: string; pct: number }>;
+}
 export interface MarketResult {
   quotes: Quote[];
 }

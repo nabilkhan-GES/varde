@@ -7,10 +7,12 @@ import type {
   EnergyResult,
   GasStorageResult,
   GeoItem,
+  FuelPricesResult,
   HubWeather,
   HubWeatherResult,
   MacroResult,
   MacroSeries,
+  RenewablesResult,
   InventoriesResult,
   InventorySeries,
   LayerId,
@@ -256,7 +258,9 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card wide" data-card="energynews"><div class="card-h"><span class="t">Energy Headlines</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="hubweather"><div class="card-h"><span class="t">Energy Hub Weather</span><span class="q" title="Live temperature at major demand/supply hubs (Open-Meteo) — heat/cold drives power & gas demand">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
-    <div class="card" data-card="macro"><div class="card-h"><span class="t">Macro Drivers</span><span class="q" title="USD, rates & inflation move oil as much as barrels do (FRED — needs a free key)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
+    <div class="card" data-card="macro"><div class="card-h"><span class="t">Macro Drivers</span><span class="q" title="USD, rates & inflation move oil as much as barrels do (FRED — needs a free key)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="fuelprices"><div class="card-h"><span class="t">Retail Fuel Prices</span><span class="q" title="US weekly pump gasoline & diesel (EIA)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="renewables"><div class="card-h"><span class="t">Renewable Electricity</span><span class="q" title="% of electricity output from renewables (World Bank, latest year)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
 
   const body = (card: string) => el.querySelector(`[data-card="${card}"] [data-b]`) as HTMLElement;
   const num = (card: string) => el.querySelector(`[data-card="${card}"] [data-n]`) as HTMLElement;
@@ -499,6 +503,50 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
             </div>`;
           })
           .join('') + `<div class="note">FRED · as of ${res.asOf ?? '—'} · Δ vs prior obs</div>`;
+    },
+    setFuelPrices(res?: FuelPricesResult | null) {
+      const b = body('fuelprices');
+      if (!res?.available || !res.series.length) {
+        num('fuelprices').textContent = '';
+        b.innerHTML = `<div class="note">US weekly pump gasoline & diesel appear when an <b>EIA_API_KEY</b> is set.</div>`;
+        return;
+      }
+      num('fuelprices').textContent = res.asOf ?? '';
+      b.innerHTML =
+        res.series
+          .map((s: MacroSeries) => {
+            const up = (s.change ?? 0) >= 0;
+            const ch = s.change != null ? `<span class="ch ${up ? 'up' : 'dn'}">${up ? '▲' : '▼'}${Math.abs(s.change).toFixed(2)}</span>` : '';
+            return `<div class="mkrow"><span class="nm">${esc(s.label)}</span>${sparkSVG(s.points)}<span class="px">$${s.latest != null ? s.latest.toFixed(2) : '—'}</span>${ch}</div>`;
+          })
+          .join('') + `<div class="note">EIA weekly · as of ${res.asOf ?? '—'} · $/gal</div>`;
+    },
+    setRenewables(res?: RenewablesResult | null) {
+      const b = body('renewables');
+      const list = res?.countries ?? [];
+      if (!list.length && res?.world == null) {
+        num('renewables').textContent = '';
+        b.innerHTML = `<div class="empty">—</div>`;
+        return;
+      }
+      num('renewables').textContent = res?.world != null ? `${res.world}%` : '';
+      const max = Math.max(100, ...list.map((c) => c.pct));
+      b.innerHTML =
+        `<div class="pad">` +
+        (res?.world != null
+          ? `<div class="bigstat"><div class="l">World renewable electricity</div><div class="v">${res.world}%</div></div>`
+          : '') +
+        `</div>` +
+        list
+          .map(
+            (c) => `<div class="barrow">
+              <span class="barnm">${esc(c.name)}</span>
+              <span class="bartrack"><span class="barfill" style="width:${Math.round((c.pct / max) * 100)}%"></span></span>
+              <span class="barval">${c.pct}%</span>
+            </div>`,
+          )
+          .join('') +
+        `<div class="note">World Bank · renewable % of electricity output · ${res?.asOf ?? ''}</div>`;
     },
     setEnergyNews(res?: EnergyNewsResult | null) {
       const items = res?.items ?? [];

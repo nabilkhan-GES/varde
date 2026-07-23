@@ -19,8 +19,10 @@ import type {
   FlightResult,
   GasStorageResult,
   AcledResult,
+  FuelPricesResult,
   HubWeatherResult,
   MacroResult,
+  RenewablesResult,
   TankerResult,
   GeoItem,
   HazardResult,
@@ -128,7 +130,8 @@ function computeDefcon(signal: GeoItem[]): { level: number; percent: number } {
   return { level, percent: Math.max(0, Math.min(100, Math.round(score))) };
 }
 
-function draw() {
+let pulseT = 0;
+function drawMap() {
   overlay.setProps({
     layers: buildLayers(data, visible, focusItem, {
       sinceMs,
@@ -136,8 +139,25 @@ function draw() {
       nowMs: Date.now(),
       cables: showCables ? cablePaths : undefined,
       pipelines: showPipes ? pipeLines : undefined,
+      pulseT,
     }),
   });
+}
+
+// Animate the pulse halo only while high-severity events are present (cheap idle).
+function hasPulse(): boolean {
+  return SIGNAL_LAYERS.concat(HAZARD_LAYERS).some(
+    (id) => visible[id] && withinWindow(data[id], sinceMs).some((d) => d.severity >= 6),
+  );
+}
+setInterval(() => {
+  if (!hasPulse()) return;
+  pulseT = performance.now();
+  drawMap();
+}, 140);
+
+function draw() {
+  drawMap();
   const signal = collect(SIGNAL_LAYERS);
   cards.setSignal(signal);
   cards.setHazards(collect(HAZARD_LAYERS));
@@ -234,7 +254,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled, fuel, renew] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -252,6 +272,8 @@ async function refresh() {
       getJson<TankerResult>(tankersUrl()),
       getJson<MacroResult>(feedUrl('fred')),
       getJson<AcledResult>(feedUrl('acled')),
+      getJson<FuelPricesResult>(feedUrl('fuelprices')),
+      getJson<RenewablesResult>(feedUrl('renewables')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -269,6 +291,8 @@ async function refresh() {
     if (tk) data.tankers = tk.tankers;
     if (acled) data.acled = acled.events;
     cards.setMacro(macro);
+    cards.setFuelPrices(fuel);
+    cards.setRenewables(renew);
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);

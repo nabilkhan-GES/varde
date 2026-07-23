@@ -23,6 +23,8 @@ import { handler as tankers } from '../src/server/routes/tankers';
 import { handler as pipelines } from '../src/server/routes/pipelines';
 import { handler as fred } from '../src/server/routes/fred';
 import { handler as acled } from '../src/server/routes/acled';
+import { handler as fuelprices } from '../src/server/routes/fuelprices';
+import { handler as renewables } from '../src/server/routes/renewables';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -47,6 +49,8 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['pipelines', pipelines, { lines: [] }],
   ['fred', fred, { available: false, series: [] }],
   ['acled', acled, { available: false, events: [] }],
+  ['fuelprices', fuelprices, { available: false, series: [] }],
+  ['renewables', renewables, { world: null, countries: [] }],
 ];
 
 let failures = 0;

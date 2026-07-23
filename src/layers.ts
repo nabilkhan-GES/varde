@@ -337,12 +337,45 @@ function cablesLayer(cables: CableLine[]): Layer {
   });
 }
 
+// Breathing halo behind the highest-severity events — the "something's happening"
+// cue. An outlined-only ScatterplotLayer whose radiusScale is animated each tick.
+function pulseLayer(
+  data: LayerData,
+  visible: Record<LayerId, boolean>,
+  sinceMs: number,
+  pulseT: number,
+): Layer | null {
+  const hot: GeoItem[] = [];
+  for (const s of LAYER_STYLES) {
+    if (!visible[s.id] || s.id === 'flights' || s.id === 'tankers') continue;
+    for (const d of withinWindow(data[s.id] ?? [], sinceMs)) if (d.severity >= 6) hot.push(d);
+  }
+  if (hot.length === 0) return null;
+  const scale = 1 + 0.9 * (0.5 + 0.5 * Math.sin(pulseT / 350));
+  return new ScatterplotLayer<GeoItem>({
+    id: 'pulse',
+    data: hot,
+    radiusUnits: 'pixels',
+    getPosition: (d) => [d.lon, d.lat],
+    getRadius: (d) => severityRadius(d.severity) + 4,
+    radiusScale: scale,
+    radiusMinPixels: 7,
+    stroked: true,
+    filled: false,
+    lineWidthUnits: 'pixels',
+    lineWidthMinPixels: 1.5,
+    getLineColor: [255, 70, 70, 150],
+    pickable: false,
+  });
+}
+
 export interface BuildOpts {
   sinceMs?: number;
   dayNight?: boolean;
   nowMs?: number;
   cables?: CableLine[];
   pipelines?: PipelineLine[];
+  pulseT?: number;
 }
 
 export function buildLayers(
@@ -351,12 +384,13 @@ export function buildLayers(
   onPick: (item: GeoItem) => void,
   opts: BuildOpts = {},
 ): Layer[] {
-  const { sinceMs = 0, dayNight = false, nowMs = 0, cables, pipelines } = opts;
+  const { sinceMs = 0, dayNight = false, nowMs = 0, cables, pipelines, pulseT = 0 } = opts;
   const base: Array<Layer | null> = [
     dayNight ? dayNightLayer(nowMs) : null,
     cables && cables.length ? cablesLayer(cables) : null,
     pipelines && pipelines.length ? pipelinesLayer(pipelines) : null,
     bypassArcLayer(visible),
+    pulseLayer(data, visible, sinceMs, pulseT),
     stormRingLayer(data, visible, onPick, sinceMs),
     weatherPolygonLayer(data, visible, onPick, sinceMs),
   ];
