@@ -5,6 +5,7 @@ import maplibregl from 'maplibre-gl';
 import { createMap } from './map';
 import { buildLayers, withinWindow } from './layers';
 import { renderCards, renderCommandBar, renderLayerPanel, renderMapBar } from './ui';
+import { initDashboard, initDivider } from './dashboard';
 import type {
   CableLine,
   CablesResult,
@@ -88,6 +89,8 @@ const layerPanel = renderLayerPanel(document.getElementById('layerpanel')!, visi
   draw();
 });
 const cards = renderCards(document.getElementById('cards')!, focusItem);
+initDashboard(document.getElementById('cards')!, document.getElementById('railbar')!);
+initDivider(document.getElementById('divider')!, document.getElementById('rail')!, () => map.resize());
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m] as string));
