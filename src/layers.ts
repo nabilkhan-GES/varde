@@ -1,7 +1,7 @@
-import { ArcLayer, GeoJsonLayer, IconLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { ArcLayer, GeoJsonLayer, IconLayer, PathLayer, PolygonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import { severityRadius } from './severity';
-import type { GeoItem, LayerData, LayerId } from './types';
+import type { CableLine, GeoItem, LayerData, LayerId } from './types';
 
 // A crisp airplane silhouette (points north), white so deck.gl's getColor can
 // tint it via mask:true — one icon recolored per aircraft by altitude.
@@ -263,10 +263,25 @@ function nightPolygon(nowMs: number): number[][] {
   return [...top, ...bottom];
 }
 
+// Submarine cables as thin reference lines (toggled from the map bar).
+function cablesLayer(cables: CableLine[]): Layer {
+  return new PathLayer<CableLine>({
+    id: 'cables',
+    data: cables,
+    getPath: (d) => d.path as unknown as [number, number][],
+    getColor: [90, 130, 170, 120],
+    getWidth: 1,
+    widthUnits: 'pixels',
+    widthMinPixels: 1,
+    pickable: false,
+  });
+}
+
 export interface BuildOpts {
   sinceMs?: number;
   dayNight?: boolean;
   nowMs?: number;
+  cables?: CableLine[];
 }
 
 export function buildLayers(
@@ -275,9 +290,10 @@ export function buildLayers(
   onPick: (item: GeoItem) => void,
   opts: BuildOpts = {},
 ): Layer[] {
-  const { sinceMs = 0, dayNight = false, nowMs = 0 } = opts;
+  const { sinceMs = 0, dayNight = false, nowMs = 0, cables } = opts;
   const base: Array<Layer | null> = [
     dayNight ? dayNightLayer(nowMs) : null,
+    cables && cables.length ? cablesLayer(cables) : null,
     bypassArcLayer(visible),
     stormRingLayer(data, visible, onPick, sinceMs),
     weatherPolygonLayer(data, visible, onPick, sinceMs),

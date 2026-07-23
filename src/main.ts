@@ -6,12 +6,16 @@ import { createMap } from './map';
 import { buildLayers, withinWindow } from './layers';
 import { renderCards, renderCommandBar, renderLayerPanel, renderMapBar } from './ui';
 import type {
+  CableLine,
+  CablesResult,
   ChokepointResult,
   ClassViResult,
+  EnergyNewsResult,
   EnergyResult,
   FireResult,
   FlightResult,
   GasStorageResult,
+  HubWeatherResult,
   GeoItem,
   HazardResult,
   InventoriesResult,
@@ -44,13 +48,26 @@ const { map, overlay } = createMap(document.getElementById('map')!);
 let popup: maplibregl.Popup | null = null;
 
 let dayNight = false;
+let showCables = false;
+let cablePaths: CableLine[] = [];
 
 const cmd = renderCommandBar(document.getElementById('cmdbar')!, () => void refresh());
 renderMapBar(document.getElementById('mapbar')!, {
   onRange: (ms) => { sinceMs = ms; draw(); },
   onRadar: (on) => void setRadar(on),
   onDayNight: (on) => { dayNight = on; draw(); },
+  onCables: (on) => void setCables(on),
 });
+
+// Submarine cables are static + heavy, so fetch once on first enable, then cache.
+async function setCables(on: boolean) {
+  showCables = on;
+  if (on && cablePaths.length === 0) {
+    const res = await getJson<CablesResult>(feedUrl('cables'));
+    if (res) cablePaths = res.cables;
+  }
+  draw();
+}
 const layerPanel = renderLayerPanel(document.getElementById('layerpanel')!, visible, (id, on) => {
   visible[id] = on;
   draw();
@@ -93,7 +110,12 @@ function computeDefcon(signal: GeoItem[]): { level: number; percent: number } {
 
 function draw() {
   overlay.setProps({
-    layers: buildLayers(data, visible, focusItem, { sinceMs, dayNight, nowMs: Date.now() }),
+    layers: buildLayers(data, visible, focusItem, {
+      sinceMs,
+      dayNight,
+      nowMs: Date.now(),
+      cables: showCables ? cablePaths : undefined,
+    }),
   });
   const signal = collect(SIGNAL_LAYERS);
   cards.setSignal(signal);
@@ -186,7 +208,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -199,6 +221,8 @@ async function refresh() {
       getJson<PizzintResult>(feedUrl('pizzint')),
       getJson<FireResult>(feedUrl('fires')),
       getJson<GasStorageResult>(feedUrl('gasstorage')),
+      getJson<EnergyNewsResult>(feedUrl('energynews')),
+      getJson<HubWeatherResult>(feedUrl('hubweather')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -211,6 +235,8 @@ async function refresh() {
     if (pz) cmd.setPizza(pz.defcon, pz.index);
     if (fr) data.fires = fr.fires;
     cards.setGasStorage(gs);
+    cards.setEnergyNews(enews);
+    cards.setHubWeather(hw);
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);

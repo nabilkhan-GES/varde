@@ -16,6 +16,9 @@ import { handler as chokepoints } from '../src/server/routes/chokepoints';
 import { handler as pizzint } from '../src/server/routes/pizzint';
 import { handler as fires } from '../src/server/routes/fires';
 import { handler as gasstorage } from '../src/server/routes/gasstorage';
+import { handler as energynews } from '../src/server/routes/energynews';
+import { handler as hubweather } from '../src/server/routes/hubweather';
+import { handler as cables } from '../src/server/routes/cables';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -33,6 +36,9 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['pizzint', pizzint, { defcon: 5, index: 0, spikes: 0, label: 'Normal Activity' }],
   ['fires', fires, { available: false, fires: [] }],
   ['gasstorage', gasstorage, { available: false, full: null, trend: null, storageTWh: null, points: [] }],
+  ['energynews', energynews, { items: [] }],
+  ['hubweather', hubweather, { hubs: [] }],
+  ['cables', cables, { cables: [] }],
 ];
 
 let failures = 0;

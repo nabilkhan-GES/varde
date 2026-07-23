@@ -83,6 +83,36 @@ export interface GasStorageResult {
   storageTWh: number | null;
   points: InventoryPoint[]; // fill % over time (oldest → newest)
 }
+
+export interface EnergyHeadline {
+  title: string;
+  source: string;
+  url?: string;
+  ts?: number;
+}
+export interface EnergyNewsResult {
+  items: EnergyHeadline[];
+}
+
+export interface HubWeather {
+  name: string;
+  region: string;
+  tempC: number | null;
+  maxC: number | null;
+  minC: number | null;
+  windKph: number | null;
+}
+export interface HubWeatherResult {
+  hubs: HubWeather[];
+}
+
+export interface CableLine {
+  name: string;
+  path: number[][]; // [lon,lat] vertices
+}
+export interface CablesResult {
+  cables: CableLine[];
+}
 export interface MarketResult {
   quotes: Quote[];
 }

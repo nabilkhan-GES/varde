@@ -2,9 +2,13 @@ import { severityColor } from './severity';
 import { LAYER_STYLES } from './layers';
 import type {
   CrisisRow,
+  EnergyHeadline,
+  EnergyNewsResult,
   EnergyResult,
   GasStorageResult,
   GeoItem,
+  HubWeather,
+  HubWeatherResult,
   InventoriesResult,
   InventorySeries,
   LayerId,
@@ -123,6 +127,7 @@ export interface MapBarHandlers {
   onRange: (ms: number) => void;
   onRadar: (on: boolean) => void;
   onDayNight: (on: boolean) => void;
+  onCables: (on: boolean) => void;
   defaultRange?: number;
 }
 
@@ -133,6 +138,7 @@ export function renderMapBar(el: HTMLElement, h: MapBarHandlers) {
     <span class="clock" data-clock>—</span>
     <div class="spacer"></div>
     <button class="tgl" data-radar>◊ Radar</button>
+    <button class="tgl" data-cables>⌇ Cables</button>
     <button class="tgl" data-daynight>☾ Day/Night</button>
     <div class="seg" data-range>${RANGES.map(([l, ms]) => `<button data-ms="${ms}" class="${ms === defaultRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const clock = el.querySelector('[data-clock]') as HTMLElement;
@@ -152,6 +158,7 @@ export function renderMapBar(el: HTMLElement, h: MapBarHandlers) {
     });
   };
   toggle('[data-radar]', h.onRadar);
+  toggle('[data-cables]', h.onCables);
   toggle('[data-daynight]', h.onDayNight);
   const tick = () => {
     clock.textContent = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
@@ -239,7 +246,9 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="chokepoints"><div class="card-h"><span class="t">Maritime Chokepoints</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="pipelines"><div class="card-h"><span class="t">Oil &amp; Gas Pipeline Status</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="storage"><div class="card-h"><span class="t">Strategic Storage Atlas</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
-    <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
+    <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card wide" data-card="energynews"><div class="card-h"><span class="t">Energy Headlines</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="hubweather"><div class="card-h"><span class="t">Energy Hub Weather</span><span class="q" title="Live temperature at major demand/supply hubs (Open-Meteo) — heat/cold drives power & gas demand">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
 
   const body = (card: string) => el.querySelector(`[data-card="${card}"] [data-b]`) as HTMLElement;
   const num = (card: string) => el.querySelector(`[data-card="${card}"] [data-n]`) as HTMLElement;
@@ -456,6 +465,42 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
             .join('') +
           (t?.note ? `<div class="note">${esc(t.note)}</div>` : '') +
           `</div>`
+        : `<div class="empty">—</div>`;
+    },
+    setEnergyNews(res?: EnergyNewsResult | null) {
+      const items = res?.items ?? [];
+      num('energynews').textContent = items.length ? String(items.length) : '';
+      const b = body('energynews');
+      b.innerHTML = items.length
+        ? items
+            .map(
+              (h: EnergyHeadline) => `<a class="nzrow" ${h.url ? `href="${h.url}" target="_blank" rel="noopener"` : ''}>
+                <span class="nzsrc">${esc(h.source)}</span>
+                <span class="nztitle">${esc(h.title)}</span>
+                <span class="nzage">${h.ts ? ago(h.ts) : ''}</span>
+              </a>`,
+            )
+            .join('')
+        : `<div class="empty">No headlines.</div>`;
+    },
+    setHubWeather(res?: HubWeatherResult | null) {
+      const hubs = res?.hubs ?? [];
+      num('hubweather').textContent = hubs.length ? String(hubs.length) : '';
+      const b = body('hubweather');
+      b.innerHTML = hubs.length
+        ? `<div class="trk"><div class="trk-h"><span>Hub</span><span>Region</span><span>Now</span><span>Hi/Lo</span></div>` +
+          hubs
+            .map((h: HubWeather) => {
+              const t = h.tempC;
+              const cls = t == null ? 'dim' : t >= 35 ? 'bad' : t >= 28 ? 'warn' : t <= 0 ? 'cold' : 'ok';
+              return `<div class="trk-r">
+                <span class="trk-nm">${esc(h.name)}</span>
+                <span class="trk-sub">${esc(h.region)}</span>
+                <span class="st ${cls}">${t != null ? `${Math.round(t)}°` : '—'}</span>
+                <span class="trk-cap">${h.maxC != null ? Math.round(h.maxC) : '—'}/${h.minC != null ? Math.round(h.minC) : '—'}°</span></div>`;
+            })
+            .join('') +
+          `<div class="note">Open-Meteo · live °C · heat/cold at demand & supply hubs</div></div>`
         : `<div class="empty">—</div>`;
     },
   };
