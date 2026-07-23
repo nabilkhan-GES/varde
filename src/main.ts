@@ -18,6 +18,7 @@ import type {
   FireResult,
   FlightResult,
   GasStorageResult,
+  AcledResult,
   HubWeatherResult,
   MacroResult,
   TankerResult,
@@ -35,16 +36,16 @@ import type {
 
 const REFRESH_MS = 60_000;
 const LAYER_IDS: LayerId[] = [
-  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi', 'chokepoints', 'fires', 'tankers',
+  'incidents', 'conflict', 'cyber', 'quakes', 'events', 'disasters', 'storms', 'weather', 'flights', 'classvi', 'chokepoints', 'fires', 'tankers', 'acled',
 ];
-const SIGNAL_LAYERS: LayerId[] = ['incidents', 'conflict', 'cyber'];
+const SIGNAL_LAYERS: LayerId[] = ['incidents', 'conflict', 'cyber', 'acled'];
 const HAZARD_LAYERS: LayerId[] = ['quakes', 'events', 'disasters', 'storms', 'weather', 'fires'];
 
 const data: LayerData = {
-  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [], chokepoints: [], fires: [], tankers: [],
+  incidents: [], conflict: [], cyber: [], quakes: [], events: [], disasters: [], storms: [], weather: [], flights: [], classvi: [], chokepoints: [], fires: [], tankers: [], acled: [],
 };
 const visible: Record<LayerId, boolean> = {
-  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true, chokepoints: true, fires: true, tankers: true,
+  incidents: true, conflict: true, cyber: true, quakes: true, events: true, disasters: true, storms: true, weather: true, flights: true, classvi: true, chokepoints: true, fires: true, tankers: true, acled: true,
 };
 let sinceMs = 0; // time window; 0 = All
 let quotes: Quote[] = [];
@@ -233,7 +234,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -250,6 +251,7 @@ async function refresh() {
       getJson<HubWeatherResult>(feedUrl('hubweather')),
       getJson<TankerResult>(tankersUrl()),
       getJson<MacroResult>(feedUrl('fred')),
+      getJson<AcledResult>(feedUrl('acled')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -265,6 +267,7 @@ async function refresh() {
     cards.setEnergyNews(enews);
     cards.setHubWeather(hw);
     if (tk) data.tankers = tk.tankers;
+    if (acled) data.acled = acled.events;
     cards.setMacro(macro);
     if (mk) {
       quotes = mk.quotes;

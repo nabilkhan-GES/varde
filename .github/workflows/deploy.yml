@@ -41,6 +41,9 @@ jobs:
           GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          ACLED_EMAIL: ${{ secrets.ACLED_EMAIL }}
+          ACLED_PASSWORD: ${{ secrets.ACLED_PASSWORD }}
+          ACLED_ACCESS_TOKEN: ${{ secrets.ACLED_ACCESS_TOKEN }}
       - name: Build (GitHub Pages base path)
         run: npm run build
         env:

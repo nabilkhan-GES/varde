@@ -11,7 +11,8 @@ export type LayerId =
   | 'storms'
   | 'chokepoints'
   | 'fires'
-  | 'tankers';
+  | 'tankers'
+  | 'acled';
 
 /** A single mappable item, normalized across every source. */
 export interface GeoItem {
@@ -73,6 +74,10 @@ export interface FireResult {
 export interface TankerResult {
   available: boolean;
   tankers: GeoItem[];
+}
+export interface AcledResult {
+  available: boolean;
+  events: GeoItem[];
 }
 export interface PizzintResult {
   defcon: number; // 1 (max) … 5 (normal)

@@ -64,7 +64,8 @@ export const LAYER_STYLES: LayerStyle[] = [
   { id: 'fires', label: 'Wildfire hotspots', color: [251, 146, 60], hex: '#fb923c' },
   { id: 'quakes', label: 'Seismicity', color: [56, 189, 248], hex: '#38bdf8' },
   { id: 'cyber', label: 'Cyber', color: [232, 121, 249], hex: '#e879f9' },
-  { id: 'conflict', label: 'Conflict', color: [239, 68, 68], hex: '#ef4444' },
+  { id: 'acled', label: 'Conflict events (ACLED)', color: [220, 38, 38], hex: '#dc2626' },
+  { id: 'conflict', label: 'Conflict (news)', color: [239, 68, 68], hex: '#ef4444' },
   { id: 'incidents', label: 'Energy incidents', color: [249, 115, 22], hex: '#f97316' },
 ];
 

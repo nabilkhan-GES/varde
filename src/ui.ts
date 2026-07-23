@@ -74,6 +74,7 @@ const LAYER_INFO: Record<LayerId, string> = {
   chokepoints: 'Maritime energy chokepoints — vessel traffic & tanker share (IMF PortWatch).',
   fires: 'Wildfire hotspots by fire radiative power (NASA FIRMS — needs a free key).',
   tankers: 'Vessels at oil chokepoints (AISStream sample) — confirmed tankers highlighted: amber = anchored/loading, cyan = underway; other traffic faint grey.',
+  acled: 'Conflict events — battles, explosions, violence, riots, protests (ACLED — needs free credentials).',
 };
 
 // ── Command bar ────────────────────────────────────────
