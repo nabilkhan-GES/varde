@@ -75,6 +75,14 @@ export interface PizzintResult {
   spikes: number;
   label: string;
 }
+export interface GasStorageResult {
+  available: boolean;
+  asOf?: string;
+  full: number | null; // latest EU fill %
+  trend: number | null; // daily change (percentage points)
+  storageTWh: number | null;
+  points: InventoryPoint[]; // fill % over time (oldest → newest)
+}
 export interface MarketResult {
   quotes: Quote[];
 }

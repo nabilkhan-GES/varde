@@ -9,7 +9,9 @@ import type {
   ChokepointResult,
   ClassViResult,
   EnergyResult,
+  FireResult,
   FlightResult,
+  GasStorageResult,
   GeoItem,
   HazardResult,
   InventoriesResult,
@@ -184,7 +186,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -195,6 +197,8 @@ async function refresh() {
       getJson<TrackersResult>(feedUrl('trackers')),
       getJson<ChokepointResult>(feedUrl('chokepoints')),
       getJson<PizzintResult>(feedUrl('pizzint')),
+      getJson<FireResult>(feedUrl('fires')),
+      getJson<GasStorageResult>(feedUrl('gasstorage')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -205,6 +209,8 @@ async function refresh() {
     if (cv) data.classvi = cv.wells;
     if (cp) data.chokepoints = cp.chokepoints;
     if (pz) cmd.setPizza(pz.defcon, pz.index);
+    if (fr) data.fires = fr.fires;
+    cards.setGasStorage(gs);
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);

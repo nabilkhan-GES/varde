@@ -3,6 +3,7 @@ import { LAYER_STYLES } from './layers';
 import type {
   CrisisRow,
   EnergyResult,
+  GasStorageResult,
   GeoItem,
   InventoriesResult,
   InventorySeries,
@@ -231,6 +232,7 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card wide" data-card="markets"><div class="card-h"><span class="t">Markets · Live Tape</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="energy"><div class="card-h"><span class="t">Energy Complex</span><span class="q" title="Live prices are real; inventories require a free EIA_API_KEY">ⓘ</span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="inventories"><div class="card-h"><span class="t">Oil Inventories</span><span class="q" title="EIA weekly stocks — commercial crude, SPR, total oil & Lower-48 nat-gas working storage">ⓘ</span><span class="n" data-n></span></div><div class="card-b pad" data-b></div></div>
+    <div class="card" data-card="gasstorage"><div class="card-h"><span class="t">EU Gas Storage</span><span class="q" title="GIE AGSI+ — EU aggregate storage fill % (needs a free GIE_API_KEY)">ⓘ</span><span class="n" data-n></span></div><div class="card-b pad" data-b></div></div>
     <div class="card" data-card="signal"><div class="card-h"><span class="t">Signal · Incidents / Conflict / Cyber</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="hazards"><div class="card-h"><span class="t">Hazards & Disasters</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="classvi"><div class="card-h"><span class="t">Class VI · CCUS Tracker</span><span class="n" data-n>0</span></div><div class="card-b" data-b></div></div>
@@ -376,6 +378,29 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
       b.innerHTML =
         inv.series.map(chartRow).join('') +
         `<div class="note">EIA weekly · as of ${inv.asOf ?? '—'} · commercial = crude excluding SPR</div>`;
+    },
+    setGasStorage(gs?: GasStorageResult | null) {
+      const b = body('gasstorage');
+      if (!gs?.available || gs.full == null) {
+        num('gasstorage').textContent = '';
+        b.innerHTML = `<div class="note">EU aggregate gas-storage fill % (GIE AGSI+) appears when a free <b>GIE_API_KEY</b> is set (register at agsi.gie.eu/account).</div>`;
+        return;
+      }
+      num('gasstorage').textContent = `${gs.full.toFixed(0)}%`;
+      const up = (gs.trend ?? 0) >= 0;
+      const trend =
+        gs.trend != null
+          ? ` <span class="wow ${up ? 'up' : 'dn'}">${up ? '+' : ''}${gs.trend.toFixed(2)} pp/d</span>`
+          : '';
+      b.innerHTML = `
+        <div class="inv-row">
+          <div class="inv-head">
+            <span class="inv-l"><span class="inv-dot" style="background:#2fe37e"></span>EU fill level</span>
+            <span class="inv-v">${gs.full.toFixed(1)}%${trend}</span>
+          </div>
+          ${areaSVG(gs.points.map((p) => p.value), '#2fe37e')}
+        </div>
+        <div class="note">GIE AGSI+ · as of ${gs.asOf ?? '—'}${gs.storageTWh != null ? ` · ${Math.round(gs.storageTWh).toLocaleString()} TWh in store` : ''}</div>`;
     },
     setTrackers(t?: TrackersResult | null) {
       const cap = (c: number | null, u: string) => (c != null ? `${c.toLocaleString()} ${esc(u)}` : '—');
