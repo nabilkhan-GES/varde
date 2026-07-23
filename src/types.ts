@@ -126,6 +126,20 @@ export interface PipelineLine {
 export interface PipelinesResult {
   lines: PipelineLine[];
 }
+
+export interface MacroSeries {
+  key: string;
+  label: string;
+  unit: string;
+  latest: number | null;
+  change: number | null; // vs previous observation, in the series' own unit
+  points: number[]; // recent values, oldest → newest (for a sparkline)
+}
+export interface MacroResult {
+  available: boolean;
+  asOf?: string;
+  series: MacroSeries[];
+}
 export interface MarketResult {
   quotes: Quote[];
 }

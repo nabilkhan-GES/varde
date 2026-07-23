@@ -9,6 +9,8 @@ import type {
   GeoItem,
   HubWeather,
   HubWeatherResult,
+  MacroResult,
+  MacroSeries,
   InventoriesResult,
   InventorySeries,
   LayerId,
@@ -252,7 +254,8 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="storage"><div class="card-h"><span class="t">Strategic Storage Atlas</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card wide" data-card="energynews"><div class="card-h"><span class="t">Energy Headlines</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
-    <div class="card" data-card="hubweather"><div class="card-h"><span class="t">Energy Hub Weather</span><span class="q" title="Live temperature at major demand/supply hubs (Open-Meteo) — heat/cold drives power & gas demand">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
+    <div class="card" data-card="hubweather"><div class="card-h"><span class="t">Energy Hub Weather</span><span class="q" title="Live temperature at major demand/supply hubs (Open-Meteo) — heat/cold drives power & gas demand">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="macro"><div class="card-h"><span class="t">Macro Drivers</span><span class="q" title="USD, rates & inflation move oil as much as barrels do (FRED — needs a free key)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>`;
 
   const body = (card: string) => el.querySelector(`[data-card="${card}"] [data-b]`) as HTMLElement;
   const num = (card: string) => el.querySelector(`[data-card="${card}"] [data-n]`) as HTMLElement;
@@ -470,6 +473,31 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
           (t?.note ? `<div class="note">${esc(t.note)}</div>` : '') +
           `</div>`
         : `<div class="empty">—</div>`;
+    },
+    setMacro(res?: MacroResult | null) {
+      const b = body('macro');
+      if (!res?.available || !res.series.length) {
+        num('macro').textContent = '';
+        b.innerHTML = `<div class="note">USD index, Treasury yields, Fed Funds, inflation breakeven & WTI — the macro drivers of oil — appear when a free <b>FRED_API_KEY</b> is set (fredaccount.stlouisfed.org).</div>`;
+        return;
+      }
+      num('macro').textContent = res.asOf ?? '';
+      b.innerHTML =
+        res.series
+          .map((s: MacroSeries) => {
+            const up = (s.change ?? 0) >= 0;
+            const ch =
+              s.change != null
+                ? `<span class="ch ${up ? 'up' : 'dn'}">${up ? '▲' : '▼'}${Math.abs(s.change)}</span>`
+                : '';
+            return `<div class="mkrow">
+              <span class="nm">${esc(s.label)}</span>
+              ${sparkSVG(s.points)}
+              <span class="px">${s.latest != null ? s.latest.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}<span class="inv-u"> ${esc(s.unit)}</span></span>
+              ${ch}
+            </div>`;
+          })
+          .join('') + `<div class="note">FRED · as of ${res.asOf ?? '—'} · Δ vs prior obs</div>`;
     },
     setEnergyNews(res?: EnergyNewsResult | null) {
       const items = res?.items ?? [];

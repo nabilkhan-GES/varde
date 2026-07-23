@@ -21,6 +21,7 @@ import { handler as hubweather } from '../src/server/routes/hubweather';
 import { handler as cables } from '../src/server/routes/cables';
 import { handler as tankers } from '../src/server/routes/tankers';
 import { handler as pipelines } from '../src/server/routes/pipelines';
+import { handler as fred } from '../src/server/routes/fred';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -43,6 +44,7 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['cables', cables, { cables: [] }],
   ['tankers', tankers, { available: false, tankers: [] }],
   ['pipelines', pipelines, { lines: [] }],
+  ['fred', fred, { available: false, series: [] }],
 ];
 
 let failures = 0;

@@ -40,6 +40,7 @@ jobs:
           NASA_FIRMS_API_KEY: ${{ secrets.NASA_FIRMS_API_KEY }}
           GIE_API_KEY: ${{ secrets.GIE_API_KEY }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
       - name: Build (GitHub Pages base path)
         run: npm run build
         env:
