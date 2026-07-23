@@ -58,9 +58,16 @@ export async function handler(): Promise<AcledResult> {
     const now = Date.now();
     const fmt = (ms: number) => new Date(ms).toISOString().slice(0, 10);
     const url =
-      `https://acleddata.com/api/acled/read?limit=800` +
+      `https://acleddata.com/api/acled/read?_format=json&limit=800` +
       `&event_date=${fmt(now - DAYS * 86400000)}|${fmt(now)}&event_date_where=BETWEEN`;
-    const j = await fetchJson<{ data?: any[] }>(url, 20000, { Authorization: `Bearer ${token}` });
+    // Auth can succeed while the account isn't yet entitled to the data endpoint
+    // ("Access denied"); degrade to empty rather than throwing on every refresh.
+    let j: { data?: any[] };
+    try {
+      j = await fetchJson<{ data?: any[] }>(url, 20000, { Authorization: `Bearer ${token}` });
+    } catch {
+      return { available: false, events: [] };
+    }
     const events: GeoItem[] = [];
     for (const e of j.data ?? []) {
       const lat = Number(e.latitude);
