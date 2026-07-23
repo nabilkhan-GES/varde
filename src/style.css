@@ -297,6 +297,9 @@ a { color: inherit; text-decoration: none; }
 .nzsrc { font-size: 8.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nztitle { font-size: 11.5px; line-height: 1.35; color: var(--ink); font-family: var(--sans); }
 .nzage { font-size: 9.5px; color: var(--faint); text-align: right; }
+.nzrow.fresh { animation: item-glow 8s ease-out; }
+.nzrow.fresh .nzsrc { color: var(--accent); }
+@keyframes item-glow { 0% { background: rgba(47,227,126,0.18); } 100% { background: transparent; } }
 
 .maplibregl-popup-content {
   background: var(--panel-2) !important; color: var(--ink) !important;

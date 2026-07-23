@@ -49,9 +49,23 @@
   classifies tankers (ship type 80–89), colors anchored vs underway.
 - **ENTSO-E EU power:** PENDING (token requested; needs XML parsing).
 
+### worldmonitor-style expansion (shipped)
+- **Snap-to-grid dashboard** (`src/dashboard.ts`): drag-reorder / resize / close / add panels
+  from a toolbar, layout persisted to localStorage; draggable map↔rail divider.
+- **Dynamism**: pulsing halos on high-severity events; flow-dots crawling bypass + pipeline
+  routes; a zero-API "World Energy · Today" count-up tile; count-bump on changing counts;
+  fresh-headline glow; ● LIVE indicator (all self-pausing on hidden tab / no motion).
+- **Panels**: maritime chokepoints (+ 7d disruption deltas), pipeline/storage/crisis trackers,
+  energy headlines, sanctions watch, hub weather, macro drivers (FRED), retail fuel prices,
+  renewable share, geopolitical tension (GDELT), prediction markets (Polymarket), EU gas storage.
+- **Overlays/layers**: RainViewer radar, pipelines, submarine cables, day/night, FIRMS fires,
+  ACLED conflict events (key-gated), AIS tankers (sample + optional relay).
+
 ## Keys (all free; set as GitHub Actions secrets + local .env)
-`EIA_API_KEY` ✓ · `GIE_API_KEY` ✓ · `NASA_FIRMS_API_KEY` ✓ · `AISSTREAM_API_KEY` (aisstream.io) ·
-`ENTSO_E_TOKEN` (transparency.entsoe.eu). Every keyed feed degrades to empty without its key.
+`EIA_API_KEY` ✓ · `GIE_API_KEY` ✓ · `NASA_FIRMS_API_KEY` ✓ · `AISSTREAM_API_KEY` ✓ · `FRED_API_KEY` ✓ ·
+`ACLED_EMAIL`/`ACLED_PASSWORD` (built; awaiting account entitlement) · `ENTSO_E_TOKEN` (pending).
+Optional dense tankers: deploy `relay/` and set the `VITE_AIS_RELAY_URL` Actions **variable**.
+Every keyed feed degrades to empty without its key.
 - **GDELT DOC 2.0 (sourcecountry geo):** BUILT but OFF by default (`src/server/gdelt.ts`,
   gate `VARDE_GDELT=1`). Evaluated for the incidents layer; its full-text matching is too
   loose (energy terms collide with data/sales "pipelines" etc.) and it rate-limits to

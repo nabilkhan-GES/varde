@@ -69,6 +69,25 @@ Vite); the `/api/*` functions run live so data is current on every refresh. Opti
 The client auto-selects the data path: `/api/*` in dev & on Vercel, `data/*.json` on Pages.
 Aircraft are the one layer that's only meaningful live (Vercel/dev) — hourly snapshots go stale.
 
+## Optional API keys (all free)
+
+Every feature works keyless; these unlock the keyed feeds. Set them as GitHub Actions
+**secrets** (Pages) and/or in `.env` (dev). Each degrades to empty when its key is absent.
+
+| Env var | Unlocks | Get it |
+|---|---|---|
+| `EIA_API_KEY` | Energy Complex, Oil Inventories, Retail Fuel Prices | eia.gov/opendata |
+| `GIE_API_KEY` | EU Gas Storage | agsi.gie.eu/account |
+| `NASA_FIRMS_API_KEY` | Wildfire hotspots | firms.modaps.eosdis.nasa.gov/api/map_key |
+| `FRED_API_KEY` | Macro Drivers (USD, rates, inflation, WTI) | fredaccount.stlouisfed.org/apikeys |
+| `AISSTREAM_API_KEY` | Tankers (timed sample) | aisstream.io |
+| `ACLED_EMAIL` + `ACLED_PASSWORD` | Conflict events | acleddata.com |
+| `ENTSO_E_TOKEN` | EU electricity (pending wiring) | transparency.entsoe.eu |
+
+**Dense live tankers:** deploy `relay/` (an always-on AISStream relay — see `relay/README.md`)
+and set the `VITE_AIS_RELAY_URL` Actions **variable** to its URL. The map then reads live
+classified tankers from the relay, falling back to the hourly sample if it's unreachable.
+
 ## License
 
 AGPL-3.0-only. Commercial/non-AGPL licensing available separately.

@@ -27,6 +27,7 @@ import { handler as fuelprices } from '../src/server/routes/fuelprices';
 import { handler as renewables } from '../src/server/routes/renewables';
 import { handler as predictions } from '../src/server/routes/predictions';
 import { handler as tension } from '../src/server/routes/tension';
+import { handler as sanctions } from '../src/server/routes/sanctions';
 
 const OUT = fileURLToPath(new URL('../public/data/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
@@ -55,6 +56,7 @@ const jobs: Array<[string, () => Promise<unknown>, unknown]> = [
   ['renewables', renewables, { world: null, countries: [] }],
   ['predictions', predictions, { markets: [] }],
   ['tension', tension, { pairs: [] }],
+  ['sanctions', sanctions, { items: [] }],
 ];
 
 let failures = 0;

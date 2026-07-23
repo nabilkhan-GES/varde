@@ -286,6 +286,7 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     <div class="card" data-card="storage"><div class="card-h"><span class="t">Strategic Storage Atlas</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="crisis"><div class="card-h"><span class="t">Energy Crisis Registry</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card wide" data-card="energynews"><div class="card-h"><span class="t">Energy Headlines</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
+    <div class="card" data-card="sanctions"><div class="card-h"><span class="t">Sanctions Watch</span><span class="q" title="Energy-scoped sanctions & export-control headlines (Google News)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="hubweather"><div class="card-h"><span class="t">Energy Hub Weather</span><span class="q" title="Live temperature at major demand/supply hubs (Open-Meteo) — heat/cold drives power & gas demand">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="macro"><div class="card-h"><span class="t">Macro Drivers</span><span class="q" title="USD, rates & inflation move oil as much as barrels do (FRED — needs a free key)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
     <div class="card" data-card="fuelprices"><div class="card-h"><span class="t">Retail Fuel Prices</span><span class="q" title="US weekly pump gasoline & diesel (EIA)">ⓘ</span><span class="n" data-n></span></div><div class="card-b" data-b></div></div>
@@ -311,6 +312,25 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
     bindRows(b, items);
   };
 
+  // Shared headline list (Energy Headlines + Sanctions Watch); items < 90 min old
+  // get a one-shot "fresh" glow so new stories announce themselves.
+  const renderHeadlines = (card: string, items: EnergyHeadline[]) => {
+    num(card).textContent = items.length ? String(items.length) : '';
+    const now = Date.now();
+    body(card).innerHTML = items.length
+      ? items
+          .map((h) => {
+            const fresh = h.ts && now - h.ts < 90 * 60 * 1000 ? ' fresh' : '';
+            return `<a class="nzrow${fresh}" ${h.url ? `href="${esc(h.url)}" target="_blank" rel="noopener"` : ''}>
+              <span class="nzsrc">${esc(h.source)}</span>
+              <span class="nztitle">${esc(h.title)}</span>
+              <span class="nzage">${h.ts ? ago(h.ts) : ''}</span>
+            </a>`;
+          })
+          .join('')
+      : `<div class="empty">No headlines.</div>`;
+  };
+
   // Live counters tile.
   startCounters(body('counters'));
   // count-bump: flash a panel's count badge whenever its value changes.
@@ -331,17 +351,21 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
       num('chokepoints').textContent = list.length ? String(list.length) : '';
       const b = body('chokepoints');
       b.innerHTML = list.length
-        ? `<div class="trk"><div class="trk-h"><span>Strait / Canal</span><span>Top cargo</span><span>Tanker</span><span>Vessels</span></div>` +
+        ? `<div class="trk"><div class="trk-h"><span>Strait / Canal</span><span>Top cargo</span><span>Tanker</span><span>7d Δ</span></div>` +
           list
-            .map(
-              (c, i) => `<div class="trk-r" data-i="${i}" title="${esc(String(c.place ?? ''))}">
+            .map((c, i) => {
+              const d = c.meta?.delta;
+              const dv = typeof d === 'number' ? d : null;
+              const dcls = dv == null ? 'dim' : Math.abs(dv) >= 15 ? 'bad' : Math.abs(dv) >= 7 ? 'warn' : 'ok';
+              const dtxt = dv == null ? '—' : `${dv > 0 ? '+' : ''}${dv}%`;
+              return `<div class="trk-r" data-i="${i}" title="${Number(c.meta?.total ?? 0).toLocaleString()} vessels/day">
                 <span class="trk-nm">${esc(c.title)}</span>
                 <span class="trk-sub">${esc(String(c.place ?? '—'))}</span>
                 <span class="trk-cap">${Number(c.meta?.tankerPct ?? 0)}%</span>
-                <span class="trk-cap">${Number(c.meta?.total ?? 0).toLocaleString()}</span></div>`,
-            )
+                <span class="st ${dcls}">${dtxt}</span></div>`;
+            })
             .join('') +
-          `</div>`
+          `<div class="note">7d Δ = tanker transits vs 3-wk baseline (PortWatch)</div></div>`
         : `<div class="empty">—</div>`;
       bindRows(b, list);
     },
@@ -629,20 +653,10 @@ export function renderCards(el: HTMLElement, onSelect: (item: GeoItem) => void) 
         : `<div class="empty">—</div>`;
     },
     setEnergyNews(res?: EnergyNewsResult | null) {
-      const items = res?.items ?? [];
-      num('energynews').textContent = items.length ? String(items.length) : '';
-      const b = body('energynews');
-      b.innerHTML = items.length
-        ? items
-            .map(
-              (h: EnergyHeadline) => `<a class="nzrow" ${h.url ? `href="${h.url}" target="_blank" rel="noopener"` : ''}>
-                <span class="nzsrc">${esc(h.source)}</span>
-                <span class="nztitle">${esc(h.title)}</span>
-                <span class="nzage">${h.ts ? ago(h.ts) : ''}</span>
-              </a>`,
-            )
-            .join('')
-        : `<div class="empty">No headlines.</div>`;
+      renderHeadlines('energynews', res?.items ?? []);
+    },
+    setSanctions(res?: EnergyNewsResult | null) {
+      renderHeadlines('sanctions', res?.items ?? []);
     },
     setHubWeather(res?: HubWeatherResult | null) {
       const hubs = res?.hubs ?? [];

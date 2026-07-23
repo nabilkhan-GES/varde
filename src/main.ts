@@ -262,7 +262,7 @@ async function refresh() {
   inFlight = true;
   cmd.setStale();
   try {
-    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled, fuel, renew, tens, preds] = await Promise.all([
+    const [news, haz, fly, mk, cv, en, inv, trk, cp, pz, fr, gs, enews, hw, tk, macro, acled, fuel, renew, tens, preds, sanc] = await Promise.all([
       getJson<NewsResult>(feedUrl('news')),
       getJson<HazardResult>(feedUrl('hazards')),
       getJson<FlightResult>(feedUrl('flights')),
@@ -284,6 +284,7 @@ async function refresh() {
       getJson<RenewablesResult>(feedUrl('renewables')),
       getJson<TensionResult>(feedUrl('tension')),
       getJson<PredictionsResult>(feedUrl('predictions')),
+      getJson<EnergyNewsResult>(feedUrl('sanctions')),
     ]);
     if (news) { data.incidents = news.incidents; data.conflict = news.conflict; data.cyber = news.cyber; }
     if (haz) {
@@ -305,6 +306,7 @@ async function refresh() {
     cards.setRenewables(renew);
     cards.setTension(tens);
     cards.setPredictions(preds);
+    cards.setSanctions(sanc);
     if (mk) {
       quotes = mk.quotes;
       cards.setMarkets(quotes);
