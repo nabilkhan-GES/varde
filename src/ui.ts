@@ -71,7 +71,7 @@ const LAYER_INFO: Record<LayerId, string> = {
   classvi: 'Class VI CO₂ sequestration permits (curated snapshot).',
   chokepoints: 'Maritime energy chokepoints — vessel traffic & tanker share (IMF PortWatch).',
   fires: 'Wildfire hotspots by fire radiative power (NASA FIRMS — needs a free key).',
-  tankers: 'Tankers at oil chokepoints — amber anchored/loading, cyan underway (AISStream — needs a free key).',
+  tankers: 'Vessels at oil chokepoints (AISStream sample) — confirmed tankers highlighted: amber = anchored/loading, cyan = underway; other traffic faint grey.',
 };
 
 // ── Command bar ────────────────────────────────────────

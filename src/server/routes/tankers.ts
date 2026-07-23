@@ -7,7 +7,7 @@ import { sampleTankers } from '../ais';
 import type { TankerResult } from '../../types';
 
 const KEY = process.env.AISSTREAM_API_KEY || process.env.VITE_AISSTREAM_API_KEY;
-const SAMPLE_MS = Number(process.env.AIS_SAMPLE_MS) || 40000;
+const SAMPLE_MS = Number(process.env.AIS_SAMPLE_MS) || 55000;
 
 export async function handler(): Promise<TankerResult> {
   if (!KEY) return { available: false, tankers: [] };
